@@ -106,17 +106,17 @@ unicode=true,
 % zakomentujte nebo odstrante. 
 % Ve vysledne svazane praci bude nahrazena skutecnym 
 % oficialnim zadanim vasi prace.
-{
-\pagenumbering{roman} \cleardoublepage \thispagestyle{empty}
-\chapter*{Na tomto místě bude oficiální zadání vaší práce}
-\begin{itemize}
-\item Toto zadání je podepsané děkanem a vedoucím katedry,
-\item musíte si ho vyzvednout na studiijním oddělení Katedry počítačů na Karlově náměstí,
-\item v jedné odevzdané práci bude originál tohoto zadání (originál zůstává po obhajobě na katedře),
-\item ve druhé bude na stejném místě neověřená kopie tohoto dokumentu (tato se vám vrátí po obhajobě).
-\end{itemize}
-\newpage
-}
+%{
+%\pagenumbering{roman}\setcounter{page}{1}\cleardoublepage \thispagestyle{empty}
+%\chapter*{Na tomto místě bude oficiální zadání vaší práce}
+%\begin{itemize}
+%\item Toto zadání je podepsané děkanem a vedoucím katedry,
+%\item musíte si ho vyzvednout na studiijním oddělení Katedry počítačů na Karlově náměstí,
+%\item v jedné odevzdané práci bude originál tohoto zadání (originál zůstává po obhajobě na katedře),
+%\item ve druhé bude na stejném místě neověřená kopie tohoto dokumentu (tato se vám vrátí po obhajobě).
+%\end{itemize}
+%\newpage
+%}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%    Titulni stranka / Title page 
 \coverpagestarts
@@ -144,13 +144,14 @@ Translation of Czech abstract into English.
 \vskip 2.75\baselineskip
 
 \noindent
-Tady možná jeden odstavec, proč je vlastně segmentace důležitá
-\noindent
-Cílem této bakalářské práce je implementovat dva algoritmy, které budou rychle, efektivně a kvalitně
-segmentovat mračno 3D bodů na planární primitiva. Algoritmy jsou implementovány jako součást 3D
-rekonstrukčního nástroje ArchiRec3D. Práce nejprve teoreticky popisuje jednotlivé algorimy, v další části jsou
-poté oba algoritmy prakticky implementovány. V závěru práce je otestována správná funkčnost algoritmů na umělě
-generovaných datech a zároveň je porovnána funkčnost obou algoritmů na reálných datech.
+Tato bakalářská práce se zabývá problematikou zpracování mračna bodů, konkrétně segmentací na planární
+primitiva. Toto má uplatnění zejména při digitální 3D rekonstrukci objektů reálného světa. V současné době je
+snaha co nejvíce automatizovat proces zpracování naměřených dat, planární segmentace je jednou ze základních
+částí tohoto procesu.
+
+Konkrétním cílem této bakalářské práce je implementovat dva algoritmy, které budou segmentaci provádět co
+nejvíce automaticky a zároveň v dostatečné kvalitě. Algoritmy jsou implementovány jako součást 3D
+rekonstrukčního nástroje ArchiRec3D.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Obsah / Table of Contents 
 \tableofcontents
@@ -167,7 +168,7 @@ generovaných datech a zároveň je porovnána funkčnost obou algoritmů na re�
 % horizontalní mezera mezi dvema odstavci
 %\parskip=5pt
 \normalfont
-\parskip=0.2\baselineskip plus 0.2\baselineskip minus 0.1\baselineskip
+\parskip=0.4\baselineskip plus 0.2\baselineskip minus 0.1\baselineskip
 
 % Odsazeni prvniho radku odstavce resi class book (neaplikuje se na prvni 
 % odstavce kapitol, sekci, podsekci atd.) Viz usepackage{indentfirst}.
@@ -183,26 +184,83 @@ generovaných datech a zároveň je porovnána funkčnost obou algoritmů na re�
 % \include{1_uvod}
 % \include{2_teorie}
 % atd...
+%*****************************************************************************
+\chapter{Úvod}
+Rekonstrukce 3D modelů se dnes uplatňuje v mnoha oborech. Běžně se můžeme setkat např. s vizualizacemi, které
+se často využívají pro simulaci vzhledu města při výstavbě nových objektů. V takovém případě se obvykle
+naskenuje aktuální stav okolí výstavby, do kterého se přidá model plánované budovy. Výsledná vizualizace poté
+umožňuje posoudit vliv nové výstavby v kontextu okolí. Výhoda je také v tom, že takovéto simulace snadno pochopí i
+laický pozorovatel. Využití lze nalézt i v technické praxi, kde mohou 3D modely zachytit aktuální stav
+zařízení (např. potrubí v elektrárně), které nemusí odpovídat zastaralé či nekompletní dokumentaci. Přesné 3D
+modely krajiny se mohou využívat např. při modelování záplav nebo šíření bezdrátového signálu. Podobně se
+modely mohou využívat k modelování šíření zvuku v uzavřených prostorech. Dále můžeme najít rozsáhlé využití v
+archeologii a ochraně kulturního dědictví, v dokumentaci důlních děl, monitorování krajiny pro detekci
+nebezpečných sesuvů, mapování pobřežních oblastí a mořského dna v okolí přístavů apod.
+
+Existuje několik metod, které se ke sběru těchto dat využívají. Tradiční metodou je fotogrammetrie, kdy se
+informace o objektu získávají z několika fotografií a pro případné zpřesnění se může využít geodetického
+zaměření. Hlavní nevýhodou této metody je přesnost naměřených dat, která výrazně klesá se vzdáleností měření.
+Tato metoda nám obvykle poskytuje souřadnice charakteristických bodů, jako jsou hrany, vrcholy apod. To může
+být velká nevýhoda zejména u nepravidelných objektů.
+
+Jednou z nejnovějších metod sběru dat je laserové skenování. Jeho hlavní výhodou je rychlý sběr velkého
+množství přesných dat v terénu. Nevýhodou oproti předchozí metodě je zejména špatná identifikace hran a
+vrcholů. Další nevýhodou může být fakt, že přístroje pro laserové skenování jsou velmi drahé. Slabinou této
+metody je také náročné zpracování, které se neobejde bez výkonné výpočetní techniky. Základním výstupem z
+laserového skenování je mračno bodů. Jedná se o tisíce až miliony bodů, které jsou definovány třemi
+kartézskými souřadnicemi (x, y, z), dále mohou obsahovat informaci o barvě (r, g, b) a případně také normálu
+(n$_x$, n$_y$, n$_z$) k ploše, na které se bod vyskytuje.
+
+\section{Segmentace mračna bodů}
+
+V této práci se zabývám zpracováním mračna bodů, konkrétně jeho planární segmentací. Cílem práce je tedy
+identifikovat ve vstupním mračnu bodů rovinné útvary, přiřadit jednotlivé body do těchto rovinných útvarů a
+případně zahodit body, které v žádné rovinně neleží (viz Obr. \ref{fig:ukazkova-scena}). Tato segmentace
+má smysl zejména v architektuře a archeologii, tedy při rekonstrukci budov a podobných objektů, které jsou
+složeny z relativně malého počtu velkých rovin (tedy stěny, střechy apod.).
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[height=10cm]{figures/1-1-segmentace}
+\caption{Ukázková scéna (nahoře) a její planární segmentace (dole)}
+\label{fig:ukazkova-scena}
+\end{center}
+\end{figure}
+
+Segmentační metody můžeme hrubě rozdělit do dvou základních kategorií \cite{Voss04}. Jednak jsou to metody, které segmentují na základě vlastností jako je vzdálenost bodů v prostoru a případně podobnost lokálně odhadnutých normál. Sem spadají např. metody, jako je segmentace na základě skenovacích linií\footnote{V anglické literatuře se označuje jako \uv{scan line segmentation} \cite{Voss04}} nebo surface growing. První zmíněná metoda vychází z toho, že data jsou pořizována postupně podél skenovacích linií. Body v těchto liniích jsou nejprve rozděleny do rovných přímek a poté jsou ve 3D prostoru na základě podobných atributů slučovány do jednotlivých segmentů. Surface growing algoritmy fungují tak, že je vybrán rovinný či nerovinný prvek (seed region) a ten je poté postupně spojován s blízkými body, které mají podobné atributy. Tato metoda je ale silně závislá na volbě vhodného původního prvku.
+
+Do druhé kategorie spadají metody, které přímo odhadují parametry roviny na základě shlukování bodů a vyhledávání lokálních maxim v prostoru parametrů. Sem patří např. rozšíření Houghovi transformace pro 3D prostor. Jeden bod v mračnu, který se nachází na ploše v objektovém prostoru definuje rovinu v prostoru parametrů. Body na stejné ploše mají poté podobné parametry (vzdálenost od počátku a naklonění rovinny) a na základě těchto paramterů jsou poté shlukovány. Jednotlivé shluky bodů pak podle dalších kritérií vytvoří jeden segment. Tato a další podobné metody mají zejména výpočetní problémy, protože mají velké paměťové nároky. Obvyklým problémem obou výše zmíněných kategorií je fakt, že jednotlivé metody se často zaměřují pouze na specifický typ vstupních dat (letecké skeny nebo pozemní skeny).
+
+Článek \cite{Seg01} navrhuje řešení, které zohledňuje jak podobnost bodů v protstoru atributů, tak vzdálenost bodů v objektovém prostoru. Zároveň snižuje počet atributů pro vyšší efektivitu a menší paměťové nároky. Dále by také metoda neměla být závislá na typu vstupních dat.
+
+
+\section{Struktura práce}
+
+Tato práce nejprve popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02}. V další sekci je popsán návrh implementace obou algoritmů, poté následuje část popisující implementace. Algoritmy jsou implementovány v rámci dodaného nástroje ArchiRec3D \cite{AR3D}, který je psaný v jazyku Java. V závěrečné části práce je otestována správná funkčnost obou algoritmů na uměle generovaných datech a na reálných datech je otestována kvalita algoritmů a jejich implementací. V závěru jsou  shrnuty výsledky testování a analyzovány nedostatky algoritmů. Je zda také zhodnoceno, zda jsou nedostatky způsobeny návrhem algoritmu nebo jeho implementací.
+
 
 %*****************************************************************************
-\include{1-uvod}
+%\chapter{Popis problému, specifikace cíle}
 
-%*****************************************************************************
-\chapter{Popis problému, specifikace cíle}
-
-\begin{itemize}
-\item Popis řešeného problému, vymezení cílů DP/BP a požadavků na implementovaný systém.
-\item Popis struktury DP/BP ve vztahu k vytyčeným cílům.
-\item Rešeršní zpracování existujících implementací, pokud jsou známy.
-\end{itemize}
+%\begin{itemize}
+%\item Vysvětlení pojmů
+%\item Popis řešeného problému, vymezení cílů DP/BP a požadavků na implementovaný systém.
+%\item Popis struktury DP/BP ve vztahu k vytyčeným cílům.
+%\item Rešeršní zpracování existujících implementací, pokud jsou známy.
+%\end{itemize}
 
 %*****************************************************************************
 \chapter{Analýza a návrh řešení}
-Analýza a návrh implementace (včetně diskuse různých alternativ a volby implementačního prostředí).
+
+\section{Segmentace mračna bodů na základě velikosti normálového vektoru \cite{Seg01}}
+
+
+
+\section{Segmentace mračna bodů pomocí vyhledávání dominantních os \cite{Seg02}}
 
 
 %*****************************************************************************
-\chapter{Realizace}
+\chapter{Implementace}
 Popis implementace/realizace se zaměřením na nestandardní části řešení.
 
 
@@ -241,11 +299,11 @@ Popis implementace/realizace se zaměřením na nestandardní části řešení.
 
 %bibliographystyle{plain}
 %\bibliographystyle{psc}
-{
+%{
 %JZ: 11.12.2008 Kdo chce mit v techto ukazkovych odkazech take odkaz na CSTeX:
 \def\CS{$\cal C\kern-0.1667em\lower.5ex\hbox{$\cal S$}\kern-0.075em $}
 \bibliography{reference}
-}
+%}
 
 % M. Dušek radi:
 %\bibliographystyle{alpha}
@@ -258,45 +316,8 @@ Popis implementace/realizace se zaměřením na nestandardní části řešení.
 %*****************************************************************************
 \appendix
 
-\chapter{Testování zaplnění stránky a odsazení odstavců}
-\textbf{\large Tato příloha nebude součástí vaší práce. 
-Slouží pouze jako příklad formátování textu.}
 
-\section*{}
-Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá, ale co mají dělat ti, kteří
-se  nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá,
-ale co mají dělat ti, kteří se nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k
-tomuhle testování používá, ale co mají dělat ti, kteří se nikdy latinsky neučili?
 
-Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá, ale co mají dělat ti, kteří
-se  nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá,
-ale co mají dělat ti, kteří se nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k
-tomuhle testování používá, ale co mají dělat ti, kteří se nikdy latinsky neučili?
-
-Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá, ale co mají dělat ti, kteří
-se  nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá,
-ale co mají dělat ti, kteří se nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k
-tomuhle testování používá, ale co mají dělat ti, kteří se nikdy latinsky neučili?
-
-Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá, ale co mají dělat ti, kteří
-se  nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá,
-ale co mají dělat ti, kteří se nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k
-tomuhle testování používá, ale co mají dělat ti, kteří se nikdy latinsky neučili?
-
-Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá, ale co mají dělat ti, kteří
-se  nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá,
-ale co mají dělat ti, kteří se nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k
-tomuhle testování používá, ale co mají dělat ti, kteří se nikdy latinsky neučili?
-
-Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá, ale co mají dělat ti, kteří
-se  nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá,
-ale co mají dělat ti, kteří se nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k
-tomuhle testování používá, ale co mají dělat ti, kteří se nikdy latinsky neučili?
-
-Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá, ale co mají dělat ti, kteří
-se  nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k tomuhle testování používá,
-ale co mají dělat ti, kteří se nikdy latinsky neučili? Určitě existuje nějaká pěkná latinská věta, která se k
-tomuhle testování používá, ale co mají dělat ti, kteří se nikdy latinsky neučili?
 %*****************************************************************************
 \chapter{Pokyny a návody k formátování textu práce}
 \textbf{\large Tato příloha samozřejmě nebude součástí vaší práce. Slouží pouze jako příklad formátování textu.}
