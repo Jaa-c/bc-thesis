@@ -236,7 +236,7 @@ Do druhé kategorie spadají metody, které přímo odhadují parametry roviny n
 
 \section{Struktura práce}
 
-Tato práce nejprve popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02}. V další sekci je popsán návrh implementace obou algoritmů, poté následuje část popisující implementace. Algoritmy jsou implementovány v rámci dodaného nástroje ArchiRec3D \cite{AR3D}, který je psaný v jazyku Java. V závěrečné části práce je otestována správná funkčnost obou algoritmů na uměle generovaných datech a na reálných datech je otestována kvalita algoritmů a jejich implementací. V závěru jsou  shrnuty výsledky testování a analyzovány nedostatky algoritmů. Je zda také zhodnoceno, zda jsou nedostatky způsobeny návrhem algoritmu nebo jeho implementací.
+Tato práce nejprve popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02} a věnuje se návrhu obou implementací. Poté následuje část popisující samotnou implementaci algoritmů. Algoritmy jsou implementovány v rámci dodaného nástroje ArchiRec3D \cite{AR3D}, který je psaný v jazyku Java. V závěrečné části práce je otestována správná funkčnost obou algoritmů na uměle generovaných datech a na reálných datech je otestována kvalita algoritmů a jejich implementací. V závěru jsou  shrnuty výsledky testování a analyzovány nedostatky algoritmů. Je zda také zhodnoceno, zda jsou nedostatky způsobeny návrhem algoritmu nebo jeho implementací.
 
 
 %*****************************************************************************
@@ -252,11 +252,50 @@ Tato práce nejprve popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02}. V da
 %*****************************************************************************
 \chapter{Analýza a návrh řešení}
 
-\section{Segmentace mračna bodů na základě velikosti normálového vektoru \cite{Seg01}}
+\section{Segmentace na základě velikosti normálového vektoru}
+
+Navržený proces segmentace v článku \cite{Seg01} zahrnuje tři hlavní kroky - definice okolí, výpočet atributů a clustering bodů. Definice okolí bodu bere v úvahu 3D vzdálenost mezi body a tvar povrchu, na kterém se bod nachází. Atributy daného bodu jsou poté vypočteny na základě tohoto definovaného okolí, pro nižší paměťové nároky jsou pro každý bod použity pouze dva parametry. Po vypočtení parametrů je proveden clustering bodů ležících na stejné ploše, který zohledňuje jak podobnost v prostoru atributů, tak vzdálenost bodů v prostoru.
+
+\subsection{Adaptivní válcová definice okolí} 
+
+Správná definice okolí bodu je zásadní podmínkou pro správnou funkčnost algoritmu, protože okolí bodu přímo ovlivňuje parametry, které jsou pro daný bod vypočteny. V tomto algoritmu je okolí definováno tak, že bere v úvahu vzdálenost bodů v prostoru, ale zároveň také tvar povrchu, na kterém se bod nachází. To znamená, že do okolí jsou zahrnuty pouze takové body, které jsou prostorově blízko, ale zároveň leží na stejné ploše.
+
+Proces definice okolí je znázorněn v diagramu na obrázku \ref{fig:diagram-okoli}. Prvním krokem je vytvořit kouli se středem v bodu, pro který okolí definujeme. Poloměr koule volíme takový, aby koule obsahovala dostatečný počet bodů pro spolehlivý výpočet parametrů. Tuto hodnotu nejde přesněji specifikovat, musí být odvozena z konkrétního mračna bodů, které zpracováváme\footnote{Nicméně praxe ukazuje, že vhodná volba jsou řádově desítky až stovky bodů uvnitř koule.}. Body, které leží uvnitř této koule, proložíme pomocí metody nejmenších čtverců výchozí rovinnou (viz Obr. \ref{fig:definice-okoli}). Poté, co je rovina proložena, vypočítáme pro každý bod v kouli jeho vzdálenost od této roviny. Inverzi této vzdálenosti použijeme v další iteraci jako váhu bodu\footnote{Jednoduše řečeno, čím je bod od plochy dál, tím je jeho váha nižší.}, jak můžeme vidět v rovnici \ref{eq:vypocet-vahy}:
+\begin{equation}
+p_i = 1/d_i
+\label{eq:vypocet-vahy}
+\end{equation}
+kde $p_i$ značí váhu i-tého bodu a  $d_i$ je vzdálenost bodu od proložené roviny. Tento proces \uv{převažování roviny} se iterativně opakuje, dokud se roviny v rámci iterací již nemění nebo dokud není dosaženo daného počtu iterací (např. 10). Poté je rovnoběžně nad a pod výslednou rovinou definován buffer. Velikost tohoto bufferu je závislá na očekávané velikosti šumu ve vstupních datech. Body, které jsou uvnitř tohoto bufferu, tvoří výsledné okolí (viz Obr. \ref{fig:definice-okoli}(b)). Ostatní body mimo buffer se již na okolí nijak nepodílejí.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/2-2-definice-okoli}
+\caption{Definice okolí bodu (boční pohled)\newline (a) zobrazuje proložení původní roviny body uvnitř koule.\newline (b) znázorňuje výslednou rovinu po iterativním procesu, který zahrnuje váhy jednotlivých bodů. Výsledné okolí tvoří modře vyznačené body uvnitř bufferu.}
+\label{fig:definice-okoli}
+\end{center}
+\end{figure}
+
+Výsledné okolí se tedy nachází v útvaru, který téměř odpovídá nízkému válci, jehož osa je normála k ploše, na které se původní bod nachází. Tato osa navíc může být v průběhu algoritmu oproti výchozí hodnotě značně upravena, proto je tato metoda pojmenována adaptivní válcová definice okolí. 
 
 
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/2-1-okoli-diagram}
+\caption{Diagram aktivit znázorňující proces definice okolí bodu}
+\label{fig:diagram-okoli}
+\end{center}
+\end{figure}
 
-\section{Segmentace mračna bodů pomocí vyhledávání dominantních os \cite{Seg02}}
+
+\newpage
+
+\subsection{Výpočet parametrů pomocí okolí bodu}
+
+Lorem ipsum
+
+\section{Segmentace pomocí vyhledávání dominantních os}
+
+\cite{Seg02}
 
 
 %*****************************************************************************
