@@ -270,13 +270,12 @@ kde $p_i$ značí váhu i-tého bodu a  $d_i$ je vzdálenost bodu od proložené
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/2-2-definice-okoli}
-\caption{Definice okolí bodu (boční pohled)\newline (a) zobrazuje proložení původní roviny body uvnitř koule.\newline (b) znázorňuje výslednou rovinu po iterativním procesu, který zahrnuje váhy jednotlivých bodů. Výsledné okolí tvoří modře vyznačené body uvnitř bufferu.}
+\caption{Definice okolí bodu (boční pohled)\newline (a) zobrazuje proložení původní roviny body uvnitř koule\newline (b) znázorňuje výslednou rovinu po iterativním procesu, který zahrnuje váhy jednotlivých bodů. Výsledné okolí tvoří modře vyznačené body uvnitř bufferu}
 \label{fig:definice-okoli}
 \end{center}
 \end{figure}
 
 Výsledné okolí se tedy nachází v útvaru, který téměř odpovídá nízkému válci, jehož osa je normála k ploše, na které se původní bod nachází. Tato osa navíc může být v průběhu algoritmu oproti výchozí hodnotě značně upravena, proto je tato metoda pojmenována adaptivní válcová definice okolí. 
-
 
 \begin{figure}[htp]
 \begin{center}
@@ -286,12 +285,68 @@ Výsledné okolí se tedy nachází v útvaru, který téměř odpovídá nízk�
 \end{center}
 \end{figure}
 
-
 \newpage
+\subsection{Výpočet parametrů bodu}
 
-\subsection{Výpočet parametrů pomocí okolí bodu}
+Atributy bodu jsou, jak již bylo zmíněno, vypočítány na základě okolí bodu. Pokud zavedeme do mračna bodů počátek, můžeme definovat normálový vektor z tohoto počátku na rovinu, na které se daný bod nachází. Většina metod, které provádějí clustering na základě vypočtených parametrů, využívá hlasovací schéma do akumulátorového pole vytvořeného v prostoru parametrů. Rozměry akumulátorového pole závisí na počtu použitých parametrů. Můžeme tedy použít 3 složky normálového vektoru jako atributy a tím zajistíme, že všechny segmenty budou správně rozeznány\footnote{Mělo by být zjevné, že jeden normálový vektor jednoznačne definuje rovinu}. Nicméně takovýto způsob vyžaduje vytvoření třírozměrného akumulátorového pole a to je v případě využití hlasovacího schématu výpočetně náročné. 
 
-Lorem ipsum
+Pro snížení výpočetních nároků je tedy nutné snížit počet parametrů. Proto je jako atribut využita velikost normálového vektoru\footnote{Myšlen je konkrétně ten normálový vektor, který začíná v počátku - jde tedy o vzdálenost roviny od počátku}. Toto řešení přináší ale nebezpečí v tom, že může existovat více rovin ve stejné vzdálenosti od počátku a v takovém případě by několik rovin splynnulo do jednoho segmentu. Jako řešení je zaveden druhý počátek a tedy i druhý atribut.Tím se značně snižuje riziko situace, kdy by více rovin mělo stejnou vzdálenost od dvou různých počátků. Obrázek \ref{fig:normal-def} (a) schématicky znázorňuje situaci, kdy mají dvě plochy stejnou vzdálenost od jednoho počátku, ale různou vzdálenost od druhého počátku, každá rovina bude mít tedy jiný pár atributů. Na obrázku \ref{fig:normal-def} (b) jsou znározněny hlasy jednotlivých rovin zaznamenané v akumulátorovém poli. Všechny body jsou v poli zaznamenány na základě těchto dvou vypočtených parametrů. Body, které patří do různých rovin, jsou tedy v akumulátorovém poli umístěné na různých místech. Hlavní výhodou tohoto řešení je tedy to, že jsme snížili počet parametrů definujích rovinu a tím také ubrali jeden rozměr akumulátorového pole.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/definice-normal}
+\caption{Schématické znároznění situace, kdy jsou dvě roviny stejně vzdálené od počátku A, ale různě vzdálené od počátku B (a), zaznamenané hlasy v akumulátorovém poli (b)}
+\label{fig:normal-def}
+\end{center}
+\end{figure}
+
+Důležité je tedy umístit oba počátky tak, aby byly v datech rovnoměrně rozprostřeny. Pokud známe maximální a minimální hodnoty souřadnic v mračnu bodů, můžeme určit jejich polohu podle rovnice \ref{eq:origins}:
+\begin{equation} 
+\label{eq:origins}
+$$
+\begin{center}
+počátek A = 
+$\left( \begin{array}{ccc}
+minX \\
+minY \\
+minZ
+\end{array}\right)$ 
++ $\frac{1}{3}$
+$\left( \begin{array}{ccc}
+maxX - minX \\
+maxY - minY \\
+maxZ - minZ
+\end{array}\right)$
+\end{center}
+\begin{center}
+počátek B = 
+$\left( \begin{array}{ccc}
+minX \\
+minY \\
+minZ
+\end{array}\right)$ 
++ $\frac{2}{3}$
+$\left( \begin{array}{ccc}
+maxX - minX \\
+maxY - minY \\
+maxZ - minZ
+\end{array}\right)$
+\end{center}
+$$
+\end{equation}
+
+
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/ac-pole}
+\caption{Ukázka akumulátorového pole (a), které representuje mračno bodů se třemi kolmými rovinami (b)}
+\label{fig:acc}
+\end{center}
+\end{figure}
+
+
+
 
 \section{Segmentace pomocí vyhledávání dominantních os}
 
