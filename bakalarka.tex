@@ -222,7 +222,7 @@ složeny z relativně malého počtu velkých rovin (tedy stěny, střechy apod.
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[height=10cm]{figures/1-1-segmentace}
-\caption{Ukázková scéna (nahoře) a její planární segmentace (dole)}
+\caption{Ukázková scéna (nahoře) a její planární segmentace (dole).}
 \label{fig:ukazkova-scena}
 \end{center}
 \end{figure}
@@ -254,7 +254,7 @@ Tato práce nejprve popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02} a vě
 
 \section{Segmentace na základě velikosti normálového vektoru}
 
-Navržený proces segmentace v článku \cite{Seg01} zahrnuje tři hlavní kroky - definice okolí, výpočet atributů a clustering bodů. Definice okolí bodu bere v úvahu 3D vzdálenost mezi body a tvar povrchu, na kterém se bod nachází. Atributy daného bodu jsou poté vypočteny na základě tohoto definovaného okolí, pro nižší paměťové nároky jsou pro každý bod použity pouze dva parametry. Po vypočtení parametrů je proveden clustering bodů ležících na stejné ploše, který zohledňuje jak podobnost v prostoru atributů, tak vzdálenost bodů v prostoru.
+Navržený proces segmentace v článku \cite{Seg01} zahrnuje tři hlavní kroky - definice okolí, výpočet atributů a klastrování bodů. Definice okolí bodu bere v úvahu 3D vzdálenost mezi body a tvar povrchu, na kterém se bod nachází. Atributy daného bodu jsou poté vypočteny na základě tohoto definovaného okolí, pro nižší paměťové nároky jsou pro každý bod použity pouze dva parametry. Po vypočtení parametrů je provedeno klastrování bodů ležících na stejné ploše, které zohledňuje jak podobnost v prostoru atributů, tak vzdálenost bodů v prostoru.
 
 \subsection{Adaptivní válcová definice okolí} 
 
@@ -270,7 +270,7 @@ kde $p_i$ značí váhu i-tého bodu a  $d_i$ je vzdálenost bodu od proložené
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/2-2-definice-okoli}
-\caption{Definice okolí bodu (boční pohled)\newline (a) zobrazuje proložení původní roviny body uvnitř koule\newline (b) znázorňuje výslednou rovinu po iterativním procesu, který zahrnuje váhy jednotlivých bodů. Výsledné okolí tvoří modře vyznačené body uvnitř bufferu}
+\caption{Definice okolí bodu (boční pohled).\newline (a) zobrazuje proložení původní roviny body uvnitř koule. Pro některé body je znázorněna jejich váha $d_i$.\newline (b) znázorňuje výslednou rovinu po iterativním procesu, který zahrnuje váhy jednotlivých bodů. Výsledné okolí tvoří modře vyznačené body uvnitř bufferu.}
 \label{fig:definice-okoli}
 \end{center}
 \end{figure}
@@ -280,7 +280,7 @@ Výsledné okolí se tedy nachází v útvaru, který téměř odpovídá nízk�
 \begin{figure}[htp]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/2-1-okoli-diagram}
-\caption{Diagram aktivit znázorňující proces definice okolí bodu}
+\caption{Diagram aktivit znázorňující proces definice okolí bodu.}
 \label{fig:diagram-okoli}
 \end{center}
 \end{figure}
@@ -288,24 +288,25 @@ Výsledné okolí se tedy nachází v útvaru, který téměř odpovídá nízk�
 \newpage
 \subsection{Výpočet parametrů bodu}
 
-Atributy bodu jsou, jak již bylo zmíněno, vypočítány na základě okolí bodu. Pokud zavedeme do mračna bodů počátek, můžeme definovat normálový vektor z tohoto počátku na rovinu, na které se daný bod nachází. Většina metod, které provádějí clustering na základě vypočtených parametrů, využívá hlasovací schéma do akumulátorového pole vytvořeného v prostoru parametrů. Rozměry akumulátorového pole závisí na počtu použitých parametrů. Můžeme tedy použít 3 složky normálového vektoru jako atributy a tím zajistíme, že všechny segmenty budou správně rozeznány\footnote{Mělo by být zjevné, že jeden normálový vektor jednoznačne definuje rovinu}. Nicméně takovýto způsob vyžaduje vytvoření třírozměrného akumulátorového pole a to je v případě využití hlasovacího schématu výpočetně náročné. 
+Atributy bodu jsou, jak již bylo zmíněno, vypočítány na základě okolí bodu. Pokud zavedeme do mračna bodů nějaký referenční bod, můžeme definovat normálový vektor z tohoto bodu na rovinu, na které se daný bod nachází. Většina metod, které provádějí klastrování na základě vypočtených parametrů, využívá hlasování do akumulátorového pole vytvořeného v prostoru parametrů. Rozměry akumulátorového pole závisí na počtu použitých parametrů. Můžeme tedy použít 3 složky normálového vektoru jako atributy a tím zajistíme, že všechny segmenty budou správně rozeznány\footnote{Mělo by být zjevné, že jeden normálový vektor jednoznačne definuje rovinu.}. Nicméně takovýto způsob vyžaduje vytvoření třírozměrného akumulátorového pole a hlasování do 3D pole je výpočetně náročná operace. 
 
-Pro snížení výpočetních nároků je tedy nutné snížit počet parametrů. Proto je jako atribut využita velikost normálového vektoru\footnote{Myšlen je konkrétně ten normálový vektor, který začíná v počátku - jde tedy o vzdálenost roviny od počátku}. Toto řešení přináší ale nebezpečí v tom, že může existovat více rovin ve stejné vzdálenosti od počátku a v takovém případě by několik rovin splynnulo do jednoho segmentu. Jako řešení je zaveden druhý počátek a tedy i druhý atribut.Tím se značně snižuje riziko situace, kdy by více rovin mělo stejnou vzdálenost od dvou různých počátků. Obrázek \ref{fig:normal-def} (a) schématicky znázorňuje situaci, kdy mají dvě plochy stejnou vzdálenost od jednoho počátku, ale různou vzdálenost od druhého počátku, každá rovina bude mít tedy jiný pár atributů. Na obrázku \ref{fig:normal-def} (b) jsou znározněny hlasy jednotlivých rovin zaznamenané v akumulátorovém poli. Všechny body jsou v poli zaznamenány na základě těchto dvou vypočtených parametrů. Body, které patří do různých rovin, jsou tedy v akumulátorovém poli umístěné na různých místech. Hlavní výhodou tohoto řešení je tedy to, že jsme snížili počet parametrů definujích rovinu a tím také ubrali jeden rozměr akumulátorového pole.
+Pro snížení výpočetních nároků je tedy nutné snížit počet parametrů. Proto je jako atribut využita velikost normálového vektoru\footnote{Myšlen je konkrétně ten normálový vektor, který začíná v daném referenčním bodu - jde tedy o vzdálenost roviny od bodu.}. Toto řešení přináší ale nebezpečí v tom, že může existovat více rovin ve stejné vzdálenosti od referenčního bodu a v takovém případě by několik rovin splynulo do jednoho segmentu. Jako řešení je zaveden druhý referenční bod a tedy i druhý atribut. Tím se značně snižuje riziko situace, kdy by více rovin mělo stejnou vzdálenost od dvou různých bodů. Obrázek \ref{fig:normal-def} (a) schématicky znázorňuje situaci, kdy mají dvě plochy stejnou vzdálenost od jednoho bodu, ale různou vzdálenost od druhého bodu, každá rovina bude mít tedy jiný pár parametrů. Na obrázku \ref{fig:normal-def} (b) jsou znározněny hlasy jednotlivých rovin zaznamenané v akumulátorovém poli. Všechny body jsou v poli zaznamenány na základě těchto dvou vypočtených parametrů. Body, které patří do různých rovin, jsou tedy v akumulátorovém poli umístěné na různých místech. Hlavní výhodou tohoto řešení je tedy to, že jsme snížili počet parametrů definujích rovinu a tím také ubrali jeden rozměr akumulátorového pole.
 
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/definice-normal}
-\caption{Schématické znároznění situace, kdy jsou dvě roviny stejně vzdálené od počátku A, ale různě vzdálené od počátku B (a), zaznamenané hlasy v akumulátorovém poli (b)}
+\caption{Schématické znároznění situace, kdy jsou dvě roviny stejně vzdálené od bodu A, ale různě vzdálené od bodu B (a), zaznamenané hlasy v akumulátorovém poli (b).}
 \label{fig:normal-def}
 \end{center}
 \end{figure}
 
-Důležité je tedy umístit oba počátky tak, aby byly v datech rovnoměrně rozprostřeny. Pokud známe maximální a minimální hodnoty souřadnic v mračnu bodů, můžeme určit jejich polohu podle rovnice \ref{eq:origins}:
+Důležité je tedy umístit oba referenční body tak, aby byly v datech rovnoměrně rozprostřeny. Pokud známe maximální a minimální hodnoty souřadnic v mračnu bodů, můžeme určit jejich polohu podle rovnice \ref{eq:origins}:
+
+\begin{center}
 \begin{equation} 
 \label{eq:origins}
 $$
-\begin{center}
-počátek A = 
+referenční bod A = 
 $\left( \begin{array}{ccc}
 minX \\
 minY \\
@@ -316,10 +317,8 @@ $\left( \begin{array}{ccc}
 maxX - minX \\
 maxY - minY \\
 maxZ - minZ
-\end{array}\right)$
-\end{center}
-\begin{center}
-počátek B = 
+\end{array}\right)$ \\
+referenční bod B = 
 $\left( \begin{array}{ccc}
 minX \\
 minY \\
@@ -331,21 +330,48 @@ maxX - minX \\
 maxY - minY \\
 maxZ - minZ
 \end{array}\right)$
-\end{center}
 $$
 \end{equation}
+\end{center}
 
+Umístěním referenčních bodů do těchto pozic značně snižujeme možnost, že se více rovin zobrazí na stejné místo v akuulátorovém poli. Nicméně pořád existuje možnost, že atributy dvou rozdílných rovin budou stejné nebo velmi podobné. Navíc v reálné situaci nebudou nikdy parametry všech bodů na jedné rovině stejné, ale budou v akumulátorovém poli rozptýlené ve více přilehlých políčkách. Tím se zvyšuje šance, že mohou v akumulátorovém poli dvě či více rovin splynout a \uv{tvářit se} jako jeden segment. Proto nemůže být tato možnost ignorována a je potřeba data dále zpracovat. Tento proces detekce problému a jeho řešení je implementován v následující části, tedy v klastrování bodů.
 
+\subsection{Klastrování bodů}
+
+Pokud máme vypočteny pozice obou referenčních bodů, můžeme spočítat parametry všech bodů v mračnu a lužit je do akumulátorového pole. Poté může být provedeno klastrování bodů. Body, které patří do různých rovin v objektovém rostoru, vytvoří různé vrcholy v prostoru parametrů. Na obrázku \ref{fig:acc-pole} je znázorněn příklad takové situace. Mračno bodů, které obsahuje tři kolmé roviny, vytvoří pomocí hlasování v akumulátorovém poli tři různé vrcholy.
 
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/ac-pole}
-\caption{Ukázka akumulátorového pole (a), které representuje mračno bodů se třemi kolmými rovinami (b)}
-\label{fig:acc}
+\caption{Ukázka akumulátorového pole (a), které representuje mračno bodů se třemi kolmými rovinami (b). Svislá osa grafu reprezentuje počet bodů, vodorovné osy parametry bodů (tedy souřadnice v poli).}
+\label{fig:acc-pole}
 \end{center}
 \end{figure}
 
+Pokud máme všechny body uloženy v akumulátorovém poli, vyhledáme buňku s největším počtem bodů (tedy nejvyšší vrchol). Velikost buňky v akumulátorovém poli je určena na základě velikosti šumu ve vstupním mračnu. Tyto body z nejvyššího vrcholu proložíme rovinou pomocí metody nejmenších čtverců. Poté ohodnotíme kvalitu roviny výpočtem efektivní hodnoty (dále jen EH) vzdáleností všech bodů od proložené roviny. Pokud máme množinu $n$ bodů $\left\{x_1, x_2, \ldots , x_n\right\}$ a jejich vzdáleností od proložené roviny $\left\{d_1, d_2, \ldots , d_n\right\}$, vypočítáme EH podle vztahu \ref{eq:rms}:
 
+\begin{equation} 
+\label{eq:rms}
+eh = \sqrt{
+\frac{1}{n}\left({d_1}^2 + {d_2}^2 + \ldots + {d_n}^2\right)
+}
+\end{equation}
+
+Přijatelná hodnota je závislá na velikosti šumu v datech, obecně lze říct, že kvalita roviny je dostatečná, pokud je vypočtená efektivní hodnota menší, než velikost šumu v datech. Pokud je EH větší, pravděpodobně jsme detekovali výše popsaný problém, kdy více rovin splynulo v akumulátorovém poli do jednoho segmentu. Řešení tohoto problému bude popsáno ke konci této sekce.
+
+Pokud je tedy vypočtená EH v přijatelných mezích, vytvoříme počáteční klastr, do kterého dáme všechny body dané buňky. Klastrování pokračuje body, které do této buňky nepatří, ale jsou v jejím okolí. Tento krok je nezbytný, protože data obvykle nebývají tak přesná, aby se všechny body z roviny trefily přesně na jedno místo v akumulátorovém poli, zejména jde o body v okolí hran. Tento postup probíhá iterativně a funguje tak, že v první iteraci je identifikováno 8 buňek v sousedství buňky s největším počtem bodů (viz Obr. \ref{fig:acc-pole-clus}).  Body z těchto osmi buněk přidáme do segmentu pouze, pokud splní dvě podmínky. První podmínkou je, že bod musí být prostorově blízko k bodům z původního klastru (např. 2x průměrná vzdálenost mezi body v původním klastru). Poté je spočítána vzdálenost bodů od roviny, která je definována body z původního clusteru. Pouze body, které jsou blíže, než je předem daný práh, mohou být přidány do klastru. Tento práh je opět určet v závislosti na velikosti šumu v datech.  Body, které nesplnily jednou z těchto dvou podmínek zůstanou na své pozici v akumulátorovém poli a jsou znovu posouzeny v dalších iteracích. Pokud jsou do klastru přidány všechny body, které splňují obě podmínky, přepočítají se parametry klastru - tedy opět se body proloží rovina, ale jsou zahrnuty i nově přidané body. Poté proces pokračuje druhou iterací. V té jsou procházeny body z 24 sousedních buněk (viz Obr. \ref{fig:acc-pole-clus}). Proces je navržen tak, aby v této iteraci byly opět procházeny i ty body, které neprošly podmínkami v první iteraci. Protože se na konci každé iterace přepočítavají parametry, mohou být tyto body v dalších iteracích do klastru zahrnuty. Takto iterativně proces pokračuje až do té doby, než do klastru nemohou být přidány žádné nové body. V tu chvíli je klastr zaznamenán a všechny jeho body jsou odebrány z akumulátorového pole.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=12cm]{figures/acc-pole-clustering}
+\caption{bndskjsfdnvk .}
+\label{fig:acc-pole-clus}
+\end{center}
+\end{figure}
+
+Nyní proces pokračuje k druhému nejvyššímu vrcholu v akumulátorovém poli, který je nalezen stejným způsobem, jako byl ten nejvyšší v předchozí iteraci. Poté se opakují stejné kroky, jako v předchozím případě. Celý tento proces přesouvání se od nejvyššího vrcholu k druhému nejvyššímu pokračuje až do té doby, dokud je velikost nejvyššího vrcholu větší, než předdefinovaná hranice.
+
+Poslední součástí algoritmu je řešení situace, kdy více rovin sdílí stejný vrchol v akumulátorovém poli. Tuto situaci jsme již detekovali pomocí výpočtu EH.
 
 
 \section{Segmentace pomocí vyhledávání dominantních os}
