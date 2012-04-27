@@ -334,7 +334,7 @@ $$
 \end{equation}
 \end{center}
 
-Umístěním referenčních bodů do těchto pozic značně snižujeme možnost, že se více rovin zobrazí na stejné místo v akuulátorovém poli. Nicméně pořád existuje možnost, že atributy dvou rozdílných rovin budou stejné nebo velmi podobné. Navíc v reálné situaci nebudou nikdy parametry všech bodů na jedné rovině stejné, ale budou v akumulátorovém poli rozptýlené ve více přilehlých políčkách. Tím se zvyšuje šance, že mohou v akumulátorovém poli dvě či více rovin splynout a \uv{tvářit se} jako jeden segment. Proto nemůže být tato možnost ignorována a je potřeba data dále zpracovat. Tento proces detekce problému a jeho řešení je implementován v následující části, tedy v klastrování bodů.
+Umístěním referenčních bodů do těchto pozic značně snižujeme možnost, že se více rovin zobrazí na stejné místo v akuulátorovém poli. Nicméně pořád existuje možnost, že atributy dvou rozdílných rovin budou stejné nebo velmi podobné. Navíc v reálné situaci nebudou nikdy parametry všech bodů na jedné rovině stejné, ale budou v akumulátorovém poli rozptýlené ve více přilehlých políčkách. Tím se zvyšuje šance, že mohou v akumulátorovém poli dvě či více rovin splynout v jeden vrchol, který by poté byl reprezentován jako jeden segment. Proto nemůže být tato možnost ignorována a je potřeba data dále zpracovat. Tento proces detekce problému a jeho řešení je implementován v následující části, tedy v klastrování bodů.
 
 \subsection{Klastrování bodů}
 
@@ -357,22 +357,51 @@ eh = \sqrt{
 }
 \end{equation}
 
-Přijatelná hodnota je závislá na velikosti šumu v datech, obecně lze říct, že kvalita roviny je dostatečná, pokud je vypočtená efektivní hodnota menší, než velikost šumu v datech. Pokud je EH větší, pravděpodobně jsme detekovali výše popsaný problém, kdy více rovin splynulo v akumulátorovém poli do jednoho segmentu. Řešení tohoto problému bude popsáno ke konci této sekce.
+Přijatelná hodnota je závislá na velikosti šumu v datech, obecně lze říct, že kvalita roviny je dostatečná, pokud je vypočtená EH menší, než velikost šumu v datech. Pokud je EH větší, pravděpodobně jsme detekovali výše popsaný problém, kdy více rovin splynulo v akumulátorovém poli do jednoho segmentu. Řešení tohoto problému bude popsáno ke konci této sekce.
 
 Pokud je tedy vypočtená EH v přijatelných mezích, vytvoříme počáteční klastr, do kterého dáme všechny body dané buňky. Klastrování pokračuje body, které do této buňky nepatří, ale jsou v jejím okolí. Tento krok je nezbytný, protože data obvykle nebývají tak přesná, aby se všechny body z roviny trefily přesně na jedno místo v akumulátorovém poli, zejména jde o body v okolí hran. Tento postup probíhá iterativně a funguje tak, že v první iteraci je identifikováno 8 buňek v sousedství buňky s největším počtem bodů (viz Obr. \ref{fig:acc-pole-clus}).  Body z těchto osmi buněk přidáme do segmentu pouze, pokud splní dvě podmínky. První podmínkou je, že bod musí být prostorově blízko k bodům z původního klastru (např. 2x průměrná vzdálenost mezi body v původním klastru). Poté je spočítána vzdálenost bodů od roviny, která je definována body z původního clusteru. Pouze body, které jsou blíže, než je předem daný práh, mohou být přidány do klastru. Tento práh je opět určet v závislosti na velikosti šumu v datech.  Body, které nesplnily jednou z těchto dvou podmínek zůstanou na své pozici v akumulátorovém poli a jsou znovu posouzeny v dalších iteracích. Pokud jsou do klastru přidány všechny body, které splňují obě podmínky, přepočítají se parametry klastru - tedy opět se body proloží rovina, ale jsou zahrnuty i nově přidané body. Poté proces pokračuje druhou iterací. V té jsou procházeny body z 24 sousedních buněk (viz Obr. \ref{fig:acc-pole-clus}). Proces je navržen tak, aby v této iteraci byly opět procházeny i ty body, které neprošly podmínkami v první iteraci. Protože se na konci každé iterace přepočítavají parametry, mohou být tyto body v dalších iteracích do klastru zahrnuty. Takto iterativně proces pokračuje až do té doby, než do klastru nemohou být přidány žádné nové body. V tu chvíli je klastr zaznamenán a všechny jeho body jsou odebrány z akumulátorového pole.
 
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=12cm]{figures/acc-pole-clustering}
-\caption{bndskjsfdnvk .}
+\caption{Prohledávání políček v akumulátorovém poli v průběhu jednotlivých iterací.}
 \label{fig:acc-pole-clus}
 \end{center}
 \end{figure}
 
 Nyní proces pokračuje k druhému nejvyššímu vrcholu v akumulátorovém poli, který je nalezen stejným způsobem, jako byl ten nejvyšší v předchozí iteraci. Poté se opakují stejné kroky, jako v předchozím případě. Celý tento proces přesouvání se od nejvyššího vrcholu k druhému nejvyššímu pokračuje až do té doby, dokud je velikost nejvyššího vrcholu větší, než předdefinovaná hranice.
 
-Poslední součástí algoritmu je řešení situace, kdy více rovin sdílí stejný vrchol v akumulátorovém poli. Tuto situaci jsme již detekovali pomocí výpočtu EH.
+Poslední součástí algoritmu je řešení situace, kdy více rovin sdílí stejný vrchol v akumulátorovém poli. Tuto situaci jsme již detekovali pomocí výpočtu EH. Pokud je vypočetná EH příliš vysoká, s velkou pravděpodobností jsou ve vrcholu body z více různých rovin. V takovém případě jsou definovány dva nové referenční body. Pozice nových referenčních bodů je definovaná podle vztahu \ref{eq:new-origins}:
 
+\begin{center}
+\begin{equation} 
+\label{eq:new-origins}
+$$
+$\left( \begin{array}{ccc}
+X_n \\
+Y_n \\
+Z_n
+\end{array}\right)$ = 
+$\left( \begin{array}{ccc}
+X_o \\
+Y_o \\
+Z_o
+\end{array}\right)$ 
++ 
+$\left( \begin{array}{ccc}
+range \times rand \\
+range \times rand \\
+range \times rand
+\end{array}\right)$
+$$
+\end{equation}
+\end{center}
+
+kde ($X_n$, $Y_n$, $Z_n$) jsou souřadnice nového bodu, ($X_o$, $Y_o$, $Z_o$) jsou souřadnice původního bodu, $range$ je hodnota určující jak nejdál může být nový bod posunut (např. 5m) a $rand$ je náhodná hodnota z intervalu (0,1).
+
+Poté je definováno malé akumulátorové pole pouze pro tyto body (způsobující problém) a na základně nově definovaných referenčních bodů jsou přepočteny atributy bodů. Poté jsou vyhledány nově vytvořené vrcholy a ty jsou klastrovány stejným způsobem, jako v běžném případě. tento proces se opakuje do té doby, než jsou nalezeny dostatečně kvalitní roviny. V případě, že do určitého počtu iterací (např. 10) není nalezena žádná přijatelná rovina, vezme se druhá nejvyšší buňka ze zpracovávaného vrcholu v původním poli, proloží se rovinou a ohodnotí se její kvalita výpočtem EH. Poté proces pokračuje standardně jednotlivými kroky, které již byly popsané.
+
+Tímto jsme popsali celý algoritmus. Jak by mělo být patrné, algortimus bere v úvahu vztahy bodů v prostoru parametrů a zároveň jejich vzdálenost v prostoru. navíc je tento algoritmus poměrně robustní, protože při klastrování mají prioritu body, které mají podobnější parametry a zároveň jsou blízko v prostoru, před body, jejichž parametry jsou více odlišné.
 
 \section{Segmentace pomocí vyhledávání dominantních os}
 
