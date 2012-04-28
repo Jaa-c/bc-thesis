@@ -257,6 +257,7 @@ Tato práce nejprve popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02} a vě
 Navržený proces segmentace v článku \cite{Seg01} zahrnuje tři hlavní kroky - definice okolí, výpočet atributů a klastrování bodů. Definice okolí bodu bere v úvahu 3D vzdálenost mezi body a tvar povrchu, na kterém se bod nachází. Atributy daného bodu jsou poté vypočteny na základě tohoto definovaného okolí, pro nižší paměťové nároky jsou pro každý bod použity pouze dva parametry. Po vypočtení parametrů je provedeno klastrování bodů ležících na stejné ploše, které zohledňuje jak podobnost v prostoru atributů, tak vzdálenost bodů v prostoru.
 
 \subsection{Adaptivní válcová definice okolí} 
+\label{sub:def-okoli}
 
 Správná definice okolí bodu je zásadní podmínkou pro správnou funkčnost algoritmu, protože okolí bodu přímo ovlivňuje parametry, které jsou pro daný bod vypočteny. V tomto algoritmu je okolí definováno tak, že bere v úvahu vzdálenost bodů v prostoru, ale zároveň také tvar povrchu, na kterém se bod nachází. To znamená, že do okolí jsou zahrnuty pouze takové body, které jsou prostorově blízko, ale zároveň leží na stejné ploše.
 
@@ -410,11 +411,40 @@ Tímto jsme popsali celý algoritmus. Jak by mělo být patrné, algortimus bere
 
 %*****************************************************************************
 \chapter{Implementace}
-Popis implementace/realizace se zaměřením na nestandardní části řešení.
 
+Tato kapitola se zabývá popisem implementace obou algoritmů. Algoritmy jsou implementovány v jazyce Java v rámci dodaného softwaru ArchiRec3D \cite{AR3D}. Kompletní zdrojový kód je k dispozici na přiloženém CD, viz kapitla~\ref{chap:CD}.
+
+\section{Segmentace na základě velikosti normálového vektoru}
+
+Implementaci tohoto algoritmu můžeme rozdělit na dvě hlavní části. První částí je výpočet parametrů pro všechny body a uložení bodů do akumulátorového pole. Druhou částí bude poté klastrování bodů v akumulátorovém poli. Tyto dvě části budou reprezentovány jako samostatné metody. První metoda bude mít na vstupu zpracovávané mračno bodů a jejím výstupem bude akumulátorové pole naplněné všemy body ze vstupního mračna. Druhá metoda bude mít toto akumulátorové pole na vstupu a výstupem budou body rozdělené do jednotlivých sementů. Takovéto rozdělení má hlavní výhodu v tom, že obě části budou na sobě nezávislé. Bude tedy možné jednou uložit body do akumulátorového pole a poté provést klastrování několikrát s různými parametry bez nutnosti znovu provádět první část.
+
+\subsection{Uložení bodů do akumulátorového pole}
+
+Tato část algoritmu bude procházet všechny body, na základě jejich okolí bude vypočítávat parametry, podle kterých budou body uloženy do akumulátorového pole. Vstupem bude tedy mračno bodů a výstupem akumulátorové pole. Prvním problémem bude tedy to, jak v paměti správě reprezentovat obě tyto struktury. To se samozřejmě musí odvíjet od operací, které budeme s daty provádět. Protože algoritmus implementuji v rámci dodaného nástroje, mám k dispozici několik základních datových struktur jako např \verb|vicitis.inner.Point3D| pro reprezentaci 3D bodu, \verb|vicitis.inner.Plane3D| pro reprezenatci roviny apod., tak samozřejmě tyto datové struktury využiji. Navíc je zde také implementováno mnoho vhodných metod využívajících tyto třídy, takže je logické použít již funkční řešení a nevymýšlet vlastní, které by bylo navíc duplicitní.
+
+Základním požadavkem na datovou strukturu reprezentující mračno bodů je možnost vyhledávat sousední body v 3D prostoru. Protože tuto operaci je nutné provádět pro každý bod, je důležité, aby byla tato operace co nejrychlejší. Naopak vytváření struktury se bude provádět pouze jednou a už do ní nebudeme za běhu přidávat ani odebírat body, takže na tyto operace nemusí být kladeny velké nároky. Pro tyto účely se nejčastěji využívají stromy, které umožňují rekurzivní dělení n-dimenzionálního prostoru na menší podprostory. Jedním z takovýchto algoritmů je octree, který rekurzivně dělí prostor na 8 podprostroů. Podobný algoritmus je kd-strom \cite{wiki:kdtree}, kde jednotlivé uzly jsou k-dimenzionální body. Tento typ stromu dělí prostor na podprostory podél těch jednotlivých dimenzí. Pokud srovnáme tyto dva algoritmy, tak octree se rychleji staví a zároveň umí jednoduše přidávat nové body do již postaveného stromu. Oproti tomu do kd-stromu se body za běhu přidávají mnohem složitěji, ale algoritmus je efektivnější pro vyhledávání bodů a nejbližších sousedů. Protože jsem určil rychlé vyhledávání nejbližších sousedů jako nejdůležitější kritérium, vybral jsem nakonec pro reprezentaci mračna bodů kd-strom. Vyhledání nejbližšího souseda v kd-stromu (o $n$ prvcích a $k$ dimenzích) má v nejlepším případě asymptotickou složitost $O(log~n)$ a v nejhorším případě $O(k \times n^{1-\frac{1}{k}})$, ve většině případů má však složitost blíže k nejlepšímu případu. Podrobný popis kd-stromu je k dispozici v \cite{wiki:kdtree}. Samozřejmě implementace kd-stromu je poměrně složitá, obzvláště, pokud má být co nejefektivnější. Proto jsem se rozhodl pro použití knihovny. Po vyzkoušení několika různých knihoven byla jednoznačně nejrychlejíší implementace \cite{kdtree}, kterou jsem použil.
+
+Pro akumulátorové pole potřebujeme nějaké dvourozměrné pole, které nám bude udržovat body  s danými parametry na jednotlivých pozicích v poli. Bylo by možné použít obyčejné \verb|int[][]| pole, které by pouze ukládalo počet bodů na jednotlivých políčkách. Takové řešení by na první pohled mohlo pro vyhledávání vrcholů při klastrování dostatečné, nicméně by bylo výpočetně náročné zpětně zjistit, které body na dané pozici jsou. Proto bude jednodušší, když budou body uložené přímo v akumulátorovém poli. Proto jsem zvolil 2D pole seznamů \verb|ArrayList<Point3D>[][]|, které budou udržovat body na jednotlivých políčkách pole. Takto budu při vyhledávání vrcholů v poli jednoduše vědět, kolik bodů se na daném políčku nachází, ale zároveň půjde tyto body ihned zpracovávat bez dalšího vyhledávání. 
+
+Velmi důležité jsou také rozměry akumulátorového pole. Podle teorie je buňky v akumulátorovém poli určena na základě velikosti šumu ve vstupním mračnu. Bohužel testovací data, která mám k dispozici, nemají šum definovaný. Proto je nutné vymyslet vlastní strategii pro určení velikosti akumulátorového pole. Pokud je akumulátorové pole příliš malé, jednotlivé vrcholy mohou splynout, nepůjde je v poli detekovat a algoritmus prakticky nebude funkční. Pokud naopak bude akumulátorové pole příliš velké, vrcholy v poli nebudou výrazné a výsledek bude stejný jako v předchozím případě - algoritmus nebude fungovat tak, jak by se od něj čekalo. Původně jsem vycházel z úvahy, že velikost políčka v akumulátorovém poli bude např. jedna tisícina z velikosti mračna bodů. V takovém případě je ale velikost pole pro všechny vstupní data stejná (např. $1000~\times~1000$). To ale není vhodné řešení, protože vstupní data mohou obsahovat řádově tisíce až miliony bodů a nezdá se logické, aby pro oba případy bylo akumulátorové pole stejně velké (a v praxi se to také ukázalo jako nefunkční řešení). Z toho jsem tedy usoudil, že velikost akumulátorového pole bude výrazně závislá na počtu vstupních bodů. Proto se zdá rozumné odvodit velikost pole právě od této hodnoty. Nejprve jsem zkusil určit velikost jako tisícinu z počtu bodů. To se také neukázalo jako vhodné řešení, protože pro malá mračna bylo pole příliš malé a pro velká mračna naopak příliš velké (pro 1,5 milionu bodů by bylo potřeba alokovat pole o rozměrech $15000~\times~15000$, což by bylo paměťově extrémně náročné). Lineární závislost mezi počtem bodů a velikostí akumulátorového pole tedy není správné řešení. Došel jsem tedy k úvaze, že by mohla být vhodná volba stejný počet políček v akumulátorovém poli, jako je počet bodů. To nám zajistí, že pole nikdy nebude příliš malé, protože se předpokládá, že body na stejné ploše budou jen v několika sousedních políčkách. Proto by mělo v poli zbýt dostatek volných políček, aby jednotlivé vrcholy nesplynuly dohromady. Po vyzkoušení na reálných datech jsem zjistil, že velikost pole není ani příliš velká a vrcholy jsou dostatečně rozeznatelné. Jako rozměr akumulátorového pole jsem tedy určil odmocninu z počtu bodů (to odpovídá stavu, že počet políček v poli se rovná počtu bodů). V takovém případě je pro mračno s 10 tisíci body alokováno pole velikosti $100~\times~100$, pro 1,5 mil bodů je to pole o rozměrech $1225~\times~1225$. Samozřejmě ani toto není optimální řešení. Velikost pole by měla být nejlépe odvozena od konkrétního zpracovávaného mračna a jeho vlastností jako očekávaný počet rovin, hustota bodů, počet bodů mimo roviny apod. Nicméně takový algoritmus by nebyl vůbec jednoduchý a pravděpodobně by vyžadoval nějaké vstupní parametry zadané uživatelem. To je ale nevhodné, za prvé se očekává, že algoritmus bude co nejvíce automatický, za druhé by běžný uživatel bez hlubších znalostí nebyl schopen takové parametry zadat. Proto jsem nakonec zvolil výše popsané řešení.
+
+Nyní máme připravené potřené datové struktury, můžeme tedy začít se samotným algoritmem. Nejprve si tedy vytvoříme novou instanci kd-stromu, konkrétně instanci třídy \verb|SqrEuclid|, což je kd-strom, který využvívá klasickou euklidovskou vzdálenost mezi body. Poté kd-strom  v cyklu naplníme body a zároveň získáme jednoduchým porovnáním  největší a nejmenší hodnoty součřadnic v celém mračnu bodů. Tyto souřadnice využijeme k výpočtu pozic referenčních bodů podle vztahu \ref{eq:origins}.
+
+Ještě před samotným výpočtem parametrů bodů musíme stanovit velikost koule, která definuje okolí (viz sekce \ref{sub:def-okoli}). V popisovaném algoritmu je tato velikost popisována euklidovskou vzdáleností (např. 3m). Já ale v testovacích datech žádné měřítko nemám, navíc mně dostupná data jsou poměrně odlišná od dat, které používali v článku. Proto je tato definice nevhodná a je potřeba ji nějak obejít. Protože mohou mít různá data výrazně jinou hustotu bodů, přijde mi rozumné velikost koule vypočítat z daného konstatního počtu bodů. Bohužel určit tento počet naprosto obecně pro libovolný typ dat je téměř nemožné. Proto jsem se rozhodl nechat tuto hodnotu jako volný parametr, který bude zadán uživatelem. To má i další důvod, tato hodnota velmi zásadně ovlivňuje dobu běhu algoritmu. Vyhledávání okolí v kd-stromu je drahá operace a pokud se pro každý bod vyhledává okolí v řádu stovek bodů, algoritmus může běžet desítky minut, což jistě není vždy optimální. Zároveň ale do určité míry platí, že čím větší okolí bodu se bere v úvahu, tím přesnější jsou vypočtené parametry bodu. Tím, že nechávám tento parametr na uživateli, mu dávám možnost vybrat si mezi rychlostí nebo kvalitou. Pokud tedy zadám malé hodnoty tohoto parametru, např. 10 - 50, tak je algoritmus poměrně rychlý, ale může dávat horší výsledky. Pokud zadám větší hodnoty, např. 80 - 200, tak může být doba běhu algoritmu výrazně pomalejší, zato s kvalitnějšími výsledky. Obecně bych doporučil volit hodnoty z intervalu 20 - 200 s tím, že vhodný kompromis mezi kvalitou a rychlostí je 40 - 80. Konkrétní dopad těchto hodnot na dobu běhu a kvalitu segmentace bude popsán v kapitole \ref{chap:test}. 
+
+
+
+
+\subsection{Klastrování bodů v akumulátorovém poli}
+
+
+\subsection{Struktura zdrojového kódu}
+
+Tady bych jen tak nastínil hlavní části toho zdrojáku ve vztahu k tomu předchozímu popisu\ldots
 
 %*****************************************************************************
 \chapter{Testování}
+\label{chap:test}
 
 \begin{itemize}
  \item Způsob, průběh a výsledky testování.
@@ -762,29 +792,26 @@ do českých uvozovek.}
 \end{description}
 \vdots
 
-%*****************************************************************************
-\chapter{UML diagramy}
-\textbf{\large Tato příloha není povinná a zřejmě se neobjeví v každé práci. Máte-li ale větší množství
-podobných diagramů popisujících systém, není nutné všechny umísťovat do hlavního textu, zvláště pokud by to
-snižovalo jeho čitelnost.}
 
 %*****************************************************************************
 \chapter{Instalační a uživatelská příručka}
-\textbf{\large Tato příloha velmi žádoucí zejména u softwarových implementačních prací.}
+Tato příloha velmi žádoucí zejména u softwarových implementačních prací
+
 
 %*****************************************************************************
 \chapter{Obsah přiloženého CD}
-\textbf{\large Tato příloha je povinná pro každou práci. Každá práce musí totiž obsahovat přiložené CD. Viz dále.}
+\label{chap:CD}
+Tato příloha je povinná pro každou práci. Každá práce musí totiž obsahovat přiložené CD. Viz dále.
 
 Může vypadat například takto. Váš seznam samozřejmě bude odpovídat typu vaší práce. (viz \cite{infodp}):
 
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=14cm]{figures/seznamcd}
-\caption{Seznam přiloženého CD --- příklad}
-\label{fig:seznamcd}
-\end{center}
-\end{figure}
+%\begin{figure}[h]
+%\begin{center}
+%\includegraphics[width=14cm]{figures/seznamcd}
+%\caption{Seznam přiloženého CD --- příklad}
+%\label{fig:seznamcd}
+%\end{center}
+%\end{figure}
 
 Na GNU/Linuxu si strukturu přiloženého CD můžete snadno vyrobit příkazem:\\ 
 \verb|$ tree . >tree.txt|\\
