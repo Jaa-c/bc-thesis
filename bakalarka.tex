@@ -440,9 +440,44 @@ Ještě před samotným výpočtem parametrů bodů musíme stanovit velikost ko
 \end{center}
 \end{figure}
 
-Hodnota, kterou uživatel zadá se ještě přímo nevyužije k definici okolí. Tato hodnota se využije pouze k vypočtení velikosti výsledné koule. Výpočet probíhá tak, že se náhodně vybere z mračna určitý počet bodů (např. setina ze všech bodů). Pro každý bod se vybere takový počet nejbližších sousedů, jaká je hodnota zadaného parametru. Poté se spočítá poloměr koule, které vybrané body tvoří (tedy vzdálenost střed - nejvzdálenější bod). Nakonec se spočítá aritmetický průměr všech vypočtených poloměrů. Tento aritmetický průměr je konečná velikost koule, která bude v algoritmu definovat okolí bodu. Pro všechny body bude mít tedy okolí stejnou velikost, ale bude pokaždé obsahovat různý počet bodů.
+Hodnota, kterou uživatel zadá se ještě přímo nevyužije k definici okolí. Tato hodnota se využije pouze k vypočtení velikosti výsledné koule. Výpočet probíhá tak, že se náhodně vybere z mračna určitý počet bodů (např. setina ze všech bodů). Pro každý náhodně vybraný bod se vybere takový počet nejbližších sousedů, jaká je hodnota zadaného parametru. Poté se spočítá poloměr koule, které vybrané body tvoří (tedy vzdálenost střed - nejvzdálenější bod). Nakonec se spočítá aritmetický průměr všech vypočtených poloměrů. Tento aritmetický průměr je konečná velikost koule, která bude v algoritmu definovat okolí bodu. Pro všechny body bude mít tedy okolí stejnou velikost, ale bude pokaždé obsahovat různý počet bodů.
 
 V tuto chvíli již máme všechny potřebné informace pro výpočet parametrů všech bodů. Máme načtené body v kd-stromu, máme definované oba referenční body, dále máme vypočtenou velikost koule pro okolí bodu a máme připravené akumulátorové pole, do kterého budeme body ukládat. Vytvoříme tedy cyklus, pomocí kterého budeme procházet všechny body v mračnu.
+
+Nyní potřebujeme pro každý bod získat jeho okolí, tedy všechny body, které leží v kouli se středem v daném bodu a poloměrem, který jsme vypočítali. Víme, kolik by mělo být v této kouli průměrně bodů. Pro první iterovaný bod tedy vezmeme tento počet nejbližích sousedů. Vyhledávání n nejbližších sousedů je v kd-stromu definovaná operace, takže je to velmi jednoduché. Dále si spočítáme vzdálenost definovaného bodu a nejvzdálenějšího bodu z vybraných sousedů (kd-strom vrací body seřazené podle vzdálenosti od původního bodu, takže nejvzdálenější bod je ten poslední v seznamu). Pokud je tato vzdálenost větší, než je velikost koule definující okolí, tak pomocí binárního prohledávání projdeme seznam sousedů a nalezneme nejvzdálenější bod, který ještě leží uvnitř koule. Všechny body, které jsou dál, zahodíme. Pokud nastane situace, kdy ještě nemáme dostatek bodů, vynásobíme aktuální počet vybraných sousedů $1,5 \times$ a tento nový počet opět vybereme z kd-stromu a testujeme. Takto pokračujeme do té doby, než máme dostatek bodů. Je potřeba zmínit, že tento iterativní proces by měl nastat co nejméně, protože vyhledávání nejbližších sousedů v kd-stromu je pomalá operace. Celý výše popsaný proces získávání bodů pro okolí je přehledně znázorněn na diagramu \ref{fig:diag-okoli}.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/okoli-diagram-algoritmus}
+\caption{Diagram znázorňující získání potřebných nejbližších sousedů bodu.}
+\label{fig:diag-okoli}
+\end{center}
+\end{figure}
+
+Protože blízké body v mračnu bodů budou mít pravděpodobně velmi podobné okolí, využijeme výslednou velikost okolí jako výchozí hodnotu pro bod v další iteraci. Tady nastává otázka, jestli použít přesně tu samou hodnotu nebo jí o trochu zvýšit. Vyhledávání bodů v kd-stromu je pomalá oprace a nechceme, aby bylo v další iteraci zbytečně provedeno dvakrát, protože chybělo několik málo bodů. Zároveň je ale nutné vzít v úvahu, že čím více bodů v kd-stromu vyhledáváme, tím pomalejší toto vyhledávání je. Je tedy otázka, jaký je optimální poměr navýšení počtu bodů do další iterace. Proto jsem se rozhodl určit tento parametr experimentálně. Porovnal jsem 3 různá vstupní mračna o různých velikostech a volil jsem velikost okolí 50 a 200 bodů. V tabulce \ref{table:okoli-param} je zaznamenán celkový čas, který vybírání sousedních bodů zabralo a také je zde uvedeno procento bodů, pro které bylo nutné vyhledávat v kd-stromu vícekrát\footnote{Tato informace je pouze pro zajímavost, relevantní pro porovnání je pouze celkový čas.}. Ve všech případech byly výsledky nejlepší při hodnotě paramteru 1,10. Pro další bod při iterování bude tedy použit $1,1\times$ násobek aktuální velikosti okolí.
+
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|l|r|r|r|r|l|l|l|l|r|l|l|l|}
+\hline
+\textit{} & \multicolumn{ 4}{c|}{\textit{Data 1: 291232 bodů}} & \multicolumn{ 4}{c|}{\textit{Data2: 81294 bodů}} & \multicolumn{ 4}{c|}{\textit{Data3: 1299900 bodů}} \\ \hline
+\textit{Okolí} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} \\ \hline
+\textit{Param.} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \multicolumn{1}{r|}{\textit{Opak.}} & \multicolumn{1}{r|}{\textit{Čas}} & \multicolumn{1}{r|}{\textit{Opak.}} & \multicolumn{1}{r|}{\textit{Čas}} & \textit{Opak.} & \multicolumn{1}{r|}{\textit{Čas}} & \multicolumn{1}{r|}{\textit{Opak.}} & \multicolumn{1}{r|}{\textit{Čas}} \\ \hline
+\textit{1,00} & 50,83\% & 21673 & 51,45\% & 79667 &  &  &  &  & \multicolumn{1}{l|}{} &  &  &  \\ \hline
+\textit{1,05} & 27,43\% & 17040 & 16,84\% & 56952 & \multicolumn{1}{r|}{33,06\%} & \multicolumn{1}{r|}{5349} & \multicolumn{1}{r|}{24,92\%} & \multicolumn{1}{r|}{18014} & 27,69\% & \multicolumn{1}{r|}{114876} &  &  \\ \hline
+\textbf{\textit{1,10}} & \textbf{17,89\%} & \textbf{15190} & \textbf{10,11\%} & \textbf{53280} & \multicolumn{1}{r|}{\textbf{24,67\%}} & \multicolumn{1}{r|}{\textbf{4514}} & \multicolumn{1}{r|}{\textbf{16,70\%}} & \multicolumn{1}{r|}{\textbf{17382}} & \textbf{17,36\%} & \multicolumn{1}{r|}{\textbf{110571}} & \textbf{} & \textbf{} \\ \hline
+\textit{1,15} & 12,88\% & 16176 & 7,31\% & 57246 & \multicolumn{1}{r|}{18,64\%} & \multicolumn{1}{r|}{5137} & \multicolumn{1}{r|}{12,36\%} & \multicolumn{1}{r|}{19689} & 12,60\% & \multicolumn{1}{r|}{111298} &  &  \\ \hline
+\textit{1,25} & 8,04\% & 16493 & 4,93\% & 60144 &  &  &  &  & 7,98\% & \multicolumn{1}{r|}{120900} &  &  \\ \hline
+\textit{1,50} & 4,26\% & 17986 & 2,91\% & 70069 &  &  &  &  & \multicolumn{1}{l|}{} &  &  &  \\ \hline
+\textit{2,00} & 2,17\% & 23895 & 1,62\% & 99684 &  &  &  &  & \multicolumn{1}{l|}{} &  &  &  \\ \hline
+\textit{2,50} & 1,51\% & 26335 & 1,15\% & 121762 &  &  &  &  & \multicolumn{1}{l|}{} &  &  &  \\ \hline
+\end{tabular}
+}
+\caption{Tabulka znázorňující rozílné časy vybírání okolí z kd-stromu v závislosti na definovaném parametru. Čas je uváděn v ms, sloupec \uv{Opak.} určuje, pro jaké procento bodů bylo nutné z kd-stromu vybírat okolí více než jednou.} 
+\label{table:okoli-param}
+\end{table}
+
 
 
 \subsection{Klastrování bodů v akumulátorovém poli}
