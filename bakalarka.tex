@@ -404,10 +404,62 @@ Poté je definováno malé akumulátorové pole pouze pro tyto body (způsobují
 
 Tímto jsme popsali celý algoritmus. Jak by mělo být patrné, algortimus bere v úvahu vztahy bodů v prostoru parametrů a zároveň jejich vzdálenost v prostoru. navíc je tento algoritmus poměrně robustní, protože při klastrování mají prioritu body, které mají podobnější parametry a zároveň jsou blízko v prostoru, před body, jejichž parametry jsou více odlišné.
 
+
 \section{Segmentace pomocí vyhledávání dominantních os}
 
 \cite{Seg02}
 
+
+\section{Proložení roviny množinou bodů}
+\label{sub:lsq}
+Důležitou součástí prvního algoritmu je proložení roviny množinou bodů pomocí metody nejmenších čtverců, viz \cite{wiki:leastsq}. Předpoklad tedy je, že chceme nalézt rovinu, která je co nejblíže od všech 3D bodů z dané množiny. Mějme množinu velikosti $k$, která obsahuje body ($p_1, \ldots, p_k$). Rovina je definována bodem $c$, který leží v rovině, a normálový vektorem $n$. Pro libovolný bod $x$ ležící v rovině platí vztah $n(x - c)^T = 0$. Pokud vezmeme bod $y$, který v rovině neleží, potom platí $n(y - c)^T \neq 0$. Je tedy vhodné definovat odchylku podle vztahu \ref{eq:odchylka}:
+
+\begin{equation}
+\label{eq:odchylka}
+(n (p_i - c)^T)^2
+\end{equation}
+
+Proložená rovina má být co nejblíže ke všem bodům. Hledáme takové $n$, které minimalizuje celkovou odchylku všech bodů. Rovinu tedy můžeme získat vyřešením následujícího vztahu:
+
+\begin{equation}
+\label{eq:ls-min}
+\min_{c,\|n\|=1} \sum\limits_{i=1}^k (n (p_i - c)^T)^2
+\end{equation}
+
+Řešení tohoto vztahu pro $c$ je:
+
+\begin{equation}
+c = \frac{1}{k} \sum\limits_{i=1}^k p_i
+\end{equation}
+
+Bod $c$ je tedy aritmetickým průměrem všech prokládaných bodů (pro tento bod se používá označení centroid). Pokud si definujeme matici $M$, která má v $i$-tém řádku hodnoty $p_i - c$ (jde tedy o matici $k \times 3$), můžeme vztah  \ref{eq:ls-min} přepsat do této formy:
+
+\begin{equation}
+\min_{\|n\|=1} \|M n\|^2
+\end{equation}
+
+Řešením tohoto problému je SVD dekompozice matice $M = USV^T$, kdy vektor $n$ je určen pravým singulárním vektorem matice $M$, který odpovídá nejmenší singulární hodnotě. Konkrétně jde o poslední sloupec matice $V^T$.
+
+Pokud tedy máme vypočtený bod $c$ a normálový vektor $n$, můžeme snadno vyjádřit rovinou např. obecnou rovnicí:
+
+\begin{equation}
+ax + by + cz + d = 0
+\end{equation}
+
+ve které parametry $a, b, c$ jsou složky normálového vektoru $n$ a $d$ spočteme jednoduše dosazením bodu $c$:
+
+\begin{equation}
+\label{eq:d}
+d = -(n_1c_1 + n_2c_2 + n_3c_3)
+\end{equation}
+
+Toto řešení předpokládá, že všechny body mají stejnou váhu. Pokud máme pro body různé váhy, do výpočtu je zahrneme poměrně jednoduše. Pokud má bod $p_i$ váhu $w_i$, musíme vztah \ref{eq:ls-min} upravit tímto způsobem:
+
+\begin{equation}
+\min_{w_i,c,\|n\|=1} \sum\limits_{i=1}^k w_i (\times n (p_i - c)^T)^2
+\end{equation}
+
+Stejně musíme upravit definici matice $M$, která bude v každém řádku obsahovat hodnoty $w_i \times (p_i - c)$. Ostatní postup však zůstává stejný.
 
 %*****************************************************************************
 \chapter{Implementace}
@@ -454,30 +506,75 @@ Nyní potřebujeme pro každý bod získat jeho okolí, tedy všechny body, kter
 \end{center}
 \end{figure}
 
-Protože blízké body v mračnu bodů budou mít pravděpodobně velmi podobné okolí, využijeme výslednou velikost okolí jako výchozí hodnotu pro bod v další iteraci. Tady nastává otázka, jestli použít přesně tu samou hodnotu nebo jí o trochu zvýšit. Vyhledávání bodů v kd-stromu je pomalá oprace a nechceme, aby bylo v další iteraci zbytečně provedeno dvakrát, protože chybělo několik málo bodů. Zároveň je ale nutné vzít v úvahu, že čím více bodů v kd-stromu vyhledáváme, tím pomalejší toto vyhledávání je. Je tedy otázka, jaký je optimální poměr navýšení počtu bodů do další iterace. Proto jsem se rozhodl určit tento parametr experimentálně. Porovnal jsem 3 různá vstupní mračna o různých velikostech a volil jsem velikost okolí 50 a 200 bodů. V tabulce \ref{table:okoli-param} je zaznamenán celkový čas, který vybírání sousedních bodů zabralo a také je zde uvedeno procento bodů, pro které bylo nutné vyhledávat v kd-stromu vícekrát\footnote{Tato informace je pouze pro zajímavost, relevantní pro porovnání je pouze celkový čas.}. Ve všech případech byly výsledky nejlepší při hodnotě paramteru 1,10. Pro další bod při iterování bude tedy použit $1,1\times$ násobek aktuální velikosti okolí.
+Protože blízké body v mračnu bodů budou mít pravděpodobně velmi podobné okolí, využijeme výslednou velikost okolí jako výchozí hodnotu pro bod v další iteraci. Tady nastává otázka, jestli použít přesně tu samou hodnotu nebo jí o trochu zvýšit. Vyhledávání bodů v kd-stromu je pomalá oprace a nechceme, aby bylo v další iteraci zbytečně provedeno dvakrát, protože chybělo několik málo bodů. Zároveň je ale nutné vzít v úvahu, že čím více bodů v kd-stromu vyhledáváme, tím pomalejší toto vyhledávání je. Je tedy otázka, jaký je optimální poměr navýšení počtu bodů do další iterace. Proto jsem se rozhodl určit tento parametr experimentálně. Porovnal jsem 3 různá vstupní mračna o různých velikostech a volil jsem velikost okolí 50 a 200 bodů. V tabulce \ref{table:okoli-param} je zaznamenán celkový čas, který vybírání sousedních bodů zabralo a také je zde uvedeno procento bodů, pro které bylo nutné vyhledávat v kd-stromu vícekrát\footnote{Tato informace je pouze pro zajímavost, relevantní pro porovnání je pouze celkový čas.}. V naprosté většině případů byly výsledky nejlepší při hodnotě paramteru 1,10. Pro další bod při iterování bude tedy použit $1,1\times$ násobek aktuální velikosti okolí.
 
 
 \begin{table}[ht]
 \resizebox{\textwidth}{!} {
-\begin{tabular}{|l|r|r|r|r|l|l|l|l|r|l|l|l|}
+\begin{tabular}{|l|r|r|r|r|r|r|r|r|r|r|r|r|}
 \hline
 \textit{} & \multicolumn{ 4}{c|}{\textit{Data 1: 291232 bodů}} & \multicolumn{ 4}{c|}{\textit{Data2: 81294 bodů}} & \multicolumn{ 4}{c|}{\textit{Data3: 1299900 bodů}} \\ \hline
 \textit{Okolí} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} \\ \hline
-\textit{Param.} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \multicolumn{1}{r|}{\textit{Opak.}} & \multicolumn{1}{r|}{\textit{Čas}} & \multicolumn{1}{r|}{\textit{Opak.}} & \multicolumn{1}{r|}{\textit{Čas}} & \textit{Opak.} & \multicolumn{1}{r|}{\textit{Čas}} & \multicolumn{1}{r|}{\textit{Opak.}} & \multicolumn{1}{r|}{\textit{Čas}} \\ \hline
-\textit{1,00} & 50,83\% & 21673 & 51,45\% & 79667 &  &  &  &  & \multicolumn{1}{l|}{} &  &  &  \\ \hline
-\textit{1,05} & 27,43\% & 17040 & 16,84\% & 56952 & \multicolumn{1}{r|}{33,06\%} & \multicolumn{1}{r|}{5349} & \multicolumn{1}{r|}{24,92\%} & \multicolumn{1}{r|}{18014} & 27,69\% & \multicolumn{1}{r|}{114876} &  &  \\ \hline
-\textbf{\textit{1,10}} & \textbf{17,89\%} & \textbf{15190} & \textbf{10,11\%} & \textbf{53280} & \multicolumn{1}{r|}{\textbf{24,67\%}} & \multicolumn{1}{r|}{\textbf{4514}} & \multicolumn{1}{r|}{\textbf{16,70\%}} & \multicolumn{1}{r|}{\textbf{17382}} & \textbf{17,36\%} & \multicolumn{1}{r|}{\textbf{110571}} & \textbf{} & \textbf{} \\ \hline
-\textit{1,15} & 12,88\% & 16176 & 7,31\% & 57246 & \multicolumn{1}{r|}{18,64\%} & \multicolumn{1}{r|}{5137} & \multicolumn{1}{r|}{12,36\%} & \multicolumn{1}{r|}{19689} & 12,60\% & \multicolumn{1}{r|}{111298} &  &  \\ \hline
-\textit{1,25} & 8,04\% & 16493 & 4,93\% & 60144 &  &  &  &  & 7,98\% & \multicolumn{1}{r|}{120900} &  &  \\ \hline
-\textit{1,50} & 4,26\% & 17986 & 2,91\% & 70069 &  &  &  &  & \multicolumn{1}{l|}{} &  &  &  \\ \hline
-\textit{2,00} & 2,17\% & 23895 & 1,62\% & 99684 &  &  &  &  & \multicolumn{1}{l|}{} &  &  &  \\ \hline
-\textit{2,50} & 1,51\% & 26335 & 1,15\% & 121762 &  &  &  &  & \multicolumn{1}{l|}{} &  &  &  \\ \hline
+\textit{Param.} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} \\ \hline
+1,00 & 50,83\% & 21673 & 51,45\% & 79667 & 49,59\% & 6153 & 49,83\% & 22536 & 50,51\% & 135517 & 50,52\% & 659173 \\ \hline
+1,05 & 27,43\% & 17040 & 16,84\% & 56952 & 33,06\% & 5349 & 24,92\% & 18014 & 27,69\% & 114876 & 15,84\% & 452836 \\ \hline
+\textbf{1,10} & \textbf{17,89\%} & \textbf{15190} & \textbf{10,11\%} & \textbf{53280} & \textbf{24,67\%} & \textbf{4514} & \textbf{16,70\%} & \textbf{17382} & \textbf{17,36\%} & \textbf{110571} & \textbf{9,31\%} & \textbf{457391} \\ \hline
+1,15 & 12,88\% & 16176 & 7,31\% & 57246 & 18,64\% & 5137 & 12,36\% & 19689 & 12,60\% & 111298 & 6,72\% & 488154 \\ \hline
+1,25 & 8,04\% & 16493 & 4,93\% & 60144 & 13,89\% & 4548 & 8,70\% & 20537 & 7,98\% & 120900 & 4,38\% & 522850 \\ \hline
+1,50 & 4,26\% & 17986 & 2,91\% & 70069 & 7,72\% & 5071 & 5,34\% & 21172 & 3,79\% & 133849 & 2,48\% & 604658 \\ \hline
+2,00 & 2,17\% & 23895 & 1,62\% & 99684 & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} \\ \hline
+2,50 & 1,51\% & 26335 & 1,15\% & 121762 & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} \\ \hline
 \end{tabular}
 }
 \caption{Tabulka znázorňující rozílné časy vybírání okolí z kd-stromu v závislosti na definovaném parametru. Čas je uváděn v ms, sloupec \uv{Opak.} určuje, pro jaké procento bodů bylo nutné z kd-stromu vybírat okolí více než jednou.} 
 \label{table:okoli-param}
 \end{table}
 
+V tuto chvíli máme pro bod vybrány všechny sousední body, které leží uvnitř dané koule. Abychom získali konečné okolí bodu, musíme proložit body rovinou a poté provést převažování této roviny, jak bylo posáno v sekci \ref{sub:def-okoli}. Dalším krokem v algoritmu je tedy pomocí metody nejmenších čtverců proložit rovinu body uvnitř koule.
+
+Teorie k proložení roviny množinou bodů pomocí metody nejmenších čtverců je popsána v sekci \ref{sub:lsq}. Implementace této metody přímo vychází z teorie. Prvním krokem je výpočet centroidu, což je bod ležící na výsledné rovině. Tento bod se spočte jednoduše jako aritmetický průměr souřadnic všech vstupních bodů. Poté se vytvoří matice, které má 3 sloupce a stejný počet řádkú, jako je vstupních bodů. Na $i$-tém řádku je po souřadnicích zapsán rozdíl hodnot $bod_i - centroid$. Nad touto maticí je poté nutné provést SVD dekompozici. Poté stačí pouze vybrat z matice $V^T$ poslední sloupec a dopočítat koeficient $d$, viz vztah \ref{eq:d}. Tím jsme záskal všechny 4 potřebné parametry a můžeme vrátit novou instanci roviny.
+
+Ještě je nutné uvést, jak se provede SVD dekompozice. To je poměrně složitý a výpočetně náročný algoritmus, takže má smysl využít nějakou kvalitní matematickou knihovnu. Těch je ale velký počet a mohou se výrazně lišit ve výkonu. Na webových stránkách \cite{svdbench} je dostupné srovnání výkonu několika nejběžnějších knihoven pro matematické výpočty. Na obrázku \ref{fig:svd-bench} je graf, který znázorňuje výkon jednotlivých knihoven při výpočtu SVD.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=10cm]{figures/svd}
+\caption{Graf znázorňující relativní výkon (1 = nejvyšší výkon) různých knihoven při SVD dekompozici. Obrázek je převzat z \cite{svdbench}.}
+\label{fig:svd-bench}
+\end{center}
+\end{figure}
+
+Nejlépe z testu vychází knihovna EJML \cite{svdlib}. Nicméně je nutné poznamenat, že tato knihovna je od stejného autora, jako je daný test. Proto jsem se rozhodl provést vlastní test na reálných datech. Nedělal jsem žádný speciální test, pouze jsem měnil knihovny pro výpočet SVD v rámci již hotového algoritmu. Použil jsem mračno 389002 bodů, nastavil velikost okolí 100 bodů\footnote{To odpovídá průměrně 100 bodům v okolí, tedy i matici 3x100 při výpočtu SVD.} a měřil jsem čas, který výpočet SVD zabere. Měření je uvedeno v tabulce \ref{table:svdlib}.
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|r|r|r|r|r|r|r|r|}
+\hline
+\textbf{Měření} & \textbf{EJML*} & \textbf{EJML} & \textbf{Jama*} & \textbf{UJMP} & \textbf{CommMath} & \textbf{Colt} & \textbf{jBlas} \\ \hline
+\textbf{1} & 88958 & 136998 & 152786 & 157150 & 185178 & 206535 & $>$300000 \\ \hline
+\textbf{2} & 88860 & 135831 & 151418 & 156057 & 182576 & 201198 & - \\ \hline
+\textbf{Ø} & 88909 & 136415 & 152102 & 156604 & 183877 & 203867 & $>$300000 \\ \hline
+\end{tabular}
+}
+\caption{Tabulka znázorňující časy výpočtu SVD různých knihoven. Časy jsou uvedeny v ms. Knihovny označené * jsou nastavené tak, aby při SVD počítaly pouze matici $V^T$.} 
+\label{table:svdlib}
+\end{table}
+
+Jak je z tabulky patrné, nejrychlejší je knihovna EJML, stejně jako ve výše uvedeném testování. Rozdíl byl natolik výrazný, že jsem provedl pouze dvě měření, přišlo mi zbytečné měření opakovat na jiných datech. Navíc EJML umožňuje při SVD vypočítávat pouze matici $V^T$, která je pro proložení roviny potřebná, což výrazně zvyšuje celkový výkon. Z těchto důvodů jsem se rozhodl pro výpočty SVD využít EJML.
+
+Dříve v této kapitole jsem odůvodňoval, proč je průměrná velikost okolí zadávána uživatelem. Jedním z argumentů bylo, že uživatel si částečně může zvolit, jestli chce segmentaci provést rychle nebo spíše pomaleji a kvalitněji. Je potřeba zmínit, že rychlost algoritmu není daná pouze vybíráním okolí z kd-stromu. Další velkou složkou z celkového času je právě výpočet SVD při prokládání roviny. Ve skutečnosti prokládání bodů rovinou zabere větší část z celkového času běhu algoritmu, než vybírání bodů z kd-stromu. Nicméně obě tyto hodnoty jsou řádově stejné a dohromady tvoří naprostou většinu z celkové doby běhu. Stejně jako u kd-stromu je i prokládání bodů rovinou je výrazně závislé na počtu vstupních bodů. Mělo by tedy být jasné, že velikost okolí naprosto zásadně ovlivňuje dobu běhu celého algoritmu, uživatel může tedy vhodnou volbou okolí výrazně přizpůsobit celkový čas algoritmu svým potřebám.
+
+Zpět k implementaci algoritmu: jsme ve fázi, kdy máme vybrané okolí bodu a tímto okolím jsme proložili rovinu. Je nutné zmínit, že při prokládání roviny může nastat výjimka, kdy bod nemá žádný bod ve svém okolí nebo má jenom jeden. V takovém případě není proložení roviny možné. Pro takovýto bod tedy nemůžeme vypočítat parametry a je nutné ho zahodit. Nicméně takových bodů by mělo být naprosté minimum a vzhledem k tomu, že bod nema okolí, tak velmi pravděpodobně neleží na žádné rovině a jde spíš o nějakou chybu ve vstupních datech. 
+
+Pokud se rovinu podaří proložit, pokračujeme úpravou této roviny pomocí převažování. Nejprve pro každý bod spočítáme váhu, což je inverze ke vzdálenosti bodu od roviny. Po vypočítání všech vah proložíme znovu rovinu všemi body, nicméně tentokrát využijeme váhy a váženou metody nejmenších čtverců. Implementace vážené varianty metody nejmenších čtverců je téměř stejná jako běžné varianty, jenom se uvažují váhy při výpočtu centroidu a při konstrukce matice, nad kterou se poté provádí SVD. Po proložení roviny se rozhoduje, zda se opět vypočítají váhy a rovina se znovu proloží nebo zda se cyklus ukončí. Ukončení cyklu nastává ve dvou případech, pokud jsme již v desáté iteraci nebo pokud se parametry nové roviny výrazně neliší od poslední iterace.
+
+Ačkoliv tento proces převažování vypadá na první pohled jednoduše, narazil jsem při něm na dva problémy. Prvním je výpočet vah, které se v rámci iterací mění pomalu a provádí se zbytečně velký počet iterací. Jako řešení se nabízí použít inverzi k druhé mocnině vzdálenosti bodu od roviny. Toto řešení funguje poměrně dobře a výrazně snižuje potřebný počet iterací a tím i celkový čas běhu algoritmu. Nicméně i toto řešení má jeden problém, váhy bodů blízko rovině mohou narůstat do výrazně velkých čísel, což může ovlivnit výsledek. Problém nastává také v okamžiku, kdy bod leží přímo na dané ploše. V tu chvíli jeho váha odpovídá hodnotě $\frac{1}{0}$, což Java převede na hodnotu $Double.INFINITY$. Pokud se takováto váha dostane do výpočtu SVD, tak sice nevznikne žádná výjimka a výpočet proběhne, nicméně výsledek je výpočtu je vždy chybný. Tento problém jsme se snažil vyřešit tím, že jsem hodnotu nekonečna nahrazoval nějakou velkou konstantou (zkoušel jsem různé varianty od 10e5 do 10e50), nicméně v tomto případě se výpočet SVD choval velmi nepředvídatelně a vracel špatné výsledky. Takže jediné řešení, které se mi podařilo najít a funguje, je body s \uv{nekonečnou váhou} do výpočtu roviny vůbec nezahrnovat. Toto řešení také není příliš dobré, protože body, které by měly rovinu určovat nejlépe jsme museli z výpočtu vynechat. Naštěstí takovýchto bodů je při výpočtu zanedbatelné množství (v průměru je ovlivněna váha jednoho bodu u 1 - 2\% výpočtů rovin), takže na výslednou segmentaci nemá tento problém žádné rozpoznatelné důsledky.
+ 
+
+Druhým problémem je otázka, jak správně nastavit hranici, kdy se v rámci dvou iterací roviny už výrazně neliší a proces je ukončen. 
+
+
+váha = nekonečno
 
 
 \subsection{Klastrování bodů v akumulátorovém poli}
