@@ -595,8 +595,42 @@ Tato část algoritmu se zabývá tím, jak v akumulátorovém poli správně id
 
 Prvním důležitým krokem je tedy správně definovat vrchol a vytvořit algoritmus, který takové vrcholy v poli vyhledá. Vrchol jsem definoval tak, že je to souvislá oblast v poli, ve které všechny políčka obsahují více bodů, než je nějaký předem stanovený práh (hodnota). S takovouto definicí beru v úvahu, že jeden vrchol se může skládat z více spojených vrcholů v blízkém okolí. Zároveň pomocí této definice můžu vrcholy vyhledávat iterativně, nejprve nastavím práh vyšší a vyberu vrcholy, které budou s velkou pravděpodobností reprezentovat segment a tento práh můžu postupně snižovat a vyhledávat nové vrcholy, dokud bude jejich kvalita přijatelná. Samozřejmě takový proces není optimální, protože se pole musí procházet vícekrát, nicméně v praxi není příliš reálné správně identifikovat všechny vrcholy najednou.
 
-Nyní je tedy potřeba navrhnout algoritmus, který takové vrcholy v poli vyhledá. 
+Nyní je tedy potřeba navrhnout algoritmus, který takové vrcholy v poli vyhledá. Na první pohled by se mohlo zdát, že by bylo vhodné využít nějaký algoritmus na bázi gradientního vzestupu či simulovaného žíhání, nicméně u takových algoritmů není zaručeno, že lokálně najdou vždy ten nejvyšší vrchol, můžou nejít pouze menší vrchol v blízkosti větší. Navíc takovéto algoritmy ani nezaručují nalezení všech vrcholů. Proto je vhodné o tomto problému uvažovat trochu jinak, než o pouhém hledání lokálních maxim. Protože jsem vrchol definoval jako spojitou oblast splňující danou podmínku (oblsat vyšší než daný práh), můžeme tento problém převést na vyhledávání spojitých oblastí v poli. K tomu se nabízí využít algoritmus flood fill, který se používá např. pro implementaci plechovky v grafických editorech (tedy \uv{vylévá} spojité oblasti stejnou barvou). Algoritmus implementujeme tak, že budeme procházet akumulátorové pole po jednotlivých políčkách. Pokud narazíme na políčko, kde je počet vyšší, než zadaný práh, pustíme flood fill na toto políčko a necháme ho vyhledat celou spojitou oblast, která je vyšší než práh. Z této oblasti poté vybereme jednoduše největší políčko a jeho souřadnice si uložíme do pomocného pole. Zároveň si vytvoříme bitové pole o stejné velikosti, jako je akumulátorové pole. Do tohoto pole si budeme poznamenávat, na kterých pozicích jsme již identifikovali vrchol. Tyto pozice poté již neprohledáváme. Tím zajistíme, že nebudeme použštět flood fill na jeden vrchol několikrát. Toto pole by nemělo přidat žádnou velkou paměťovou zátěž, protože pro označení políčka použijeme pouze jeden bit, takže pro toto pole potřeba alokovat pouze osminu paměti oproti původnímu akumulátorovému poli. Pomocí tohoto algoritmu projdeme celé pole a vyhledáme všechny vrcholy.
 
+Samotný flood fill implementujeme pomocí fronty. Do té se nejprve přidá výchozí políčko. Poté začneme z fronty políčka vybírat. Vždy sa zkontroluje všech 8 sousedních směrů a pokud nalezneme políčko, které je vyšší než práh a ještě jsme ho neprohledali, přidáme ho do fronty. Takto pokračujeme , dokud jsou ve frontě nějaká políčka. Zároveň si při tomto procesu rovou ukládáme nejvyšší políčko, na kterém jsme byli. To využijeme k identifikaci daného vrcholu.
+
+Celý tento proces jsme vytvořili na základě toho, že vrchol je spojitá oblast vyšší, než daný práh. Zatím jsme však neurčili, jak tuto hodnotu získat, což je samozřejmě pro algoritmus naprosto zásadní. Tato hodnota bude velmi závislá na počtu bodů a počtu očekávaných rovin v mračnu. Počet bodů v mračnu nicméně není pro definici tolik zásadní, protože ten ovlivňuje velikost akumulátorového pole. Takže nejde jednoduše určit vztah mezi velikostí vrcholů a počtem vstupních bodů. Důležitějším faktorem bude počet rovin ve vstupním mračnu. Pokud bude mít mračno např. 4 roviny, dá se očekávat, že vzniknou 4 vysoké vrcholy. Pokud bude ale v mračnu rovin 15, bude pravděpodobně většina vrcholů mnohem nižších. Počet rovin však algoritmus nemůže žádným způsobem odhadnout, bude tedy nutné, aby tento parametr nějakým způsobem ovlivnil uživatel. Byl by samozřejmě nesmysl, aby uživatel zadával samotný práh nebo případně nějakou očekávanou velikost vrcholů, uživatel samozřejmě nemusí vůbec vědět, jak algoritmus funguje a takové hodnoty by nebyl schopný odhadnout. Uživatel je však schopen odhadnout počet rovin v mračnu. Práh jsem se tedy rozhodl tak, že jeho výchozí hodnota bude nastavená na velikost akumulátorového pole (tím bude částečně refektovat počet bodů v mračnu). Uživatel poté zadá hodnotu, která bude řádově odpovídat očekávanému počtu rovin a touto hodnotou vydělíme výchozí nastavení prahu. Je nutné zdůraznit, že počet rovin bude tomuto parametru odpovídat pouze velmi přibližně. Uživatel spíše zadá ze začátku nižší hodnotu a pokud bude nalezeno příliš málo rovin, tak rovinu zvýší. Algoritmus bude uzpůsobený tomu, aby měl uživatel možnost tuto hodnotu za běhu upravovat. Více o použití a zadávání této hodnoty bude zmíněno v sekci \ref{sub:pouziti} a v kapitole \ref{chap:test}.
+
+Máme tedy hotovou část, kdy jsme identifikovali vrcholy v poli a máme uložené souřadnice nejvyšších políček z těchto vrcholů. Nyní potřebujeme z každého vrcholu vybrat body, které patří do jednoho segmentu. Postup je takový, že vždy vybereme body z nejvyšší buňky, ty proložíme plochou a vypočítáme RMS. Poté procházíme okolní buňky (viz Obr. \ref{fig:acc-pole-clus}) a pokud body mají vzdálenost od proložené roviny menší než 2$\times$RMS (leží ve stejné rovině) a zároveň jsou blízko k ostatní bodům v prostoru, tak je přidáme do segmentu. Tímto procesem bychom měli postupně projít všechny vrcholy. Tento proces má v zásadě dvě problematické části. Prvním problémem je, jak určit, že je bod blízko k osoatním bodům v prostoru. Podle teorie by se měla spočítat průměrná vzdálenost mezi všemni body v nejvyšším políčku vrcholu. Pro každý bod by se poté zjišťovalo, jestli je jeho průměrná vzdálenost ke všem bodům srovnatelná. Toto řešení je ale velmi neefektivní, protože pro každý bod musíme počítat vzdálenost ke všem ostatním bodům v segmentu. Nicméně podobnou podmínku je třeba při přidávání bodů do segmentu zachovat. Proto zkonstruujeme nad body z nejvyšší buňky kd-strom. Při přidání nového bodu vždy vezmeme nejbližšího souseda a zjistíme jeho vzdálenost. Pokud je tato vzdálenost srovnatelná s průměrnou vzdáleností mezi body (tu v tomto případě také musíme spočítat), tak můžeme bod do segementu přidat. Tabulka \ref{table:podminka-vzdalenosti} ukazuje rozdíly v časech při klastrování s použitím průměrné vzdálenosti od všech bodů a při použití kd-stromu. Z tabulky je patrné, že použití kd-stromu je výrazně efektivnější, než druhá varianta. Parametry klastrování uvedené v tabulce budou vysvětleny později.
+
+\begin{table}[ht]
+\begin{tabular}{|c|l|r|r|}
+\hline
+\multicolumn{ 1}{|c|}{\textbf{Data}} & \multicolumn{ 1}{c|}{\textbf{Parametry}} & \multicolumn{ 2}{c|}{\textbf{Čas [s]}} \\ \hline
+\multicolumn{ 1}{|l|}{} & \multicolumn{ 1}{l|}{} & \multicolumn{1}{l|}{\textbf{Kd-strom}} & \multicolumn{1}{l|}{\textbf{Prům. Vzd.}} \\ \hline
+\multicolumn{ 1}{|c|}{291232 bodů} & 5 a 100 & 3 & 388 \\ \hline
+\multicolumn{ 1}{|l|}{} & 10 a 500 & 14 & 559 \\ \hline
+723695 bodů & 2 a 100 & 26 & >3600 \\ \hline
+\end{tabular}
+\caption{Tabulka zobrazuje rozdílné časy klastrování, pokud vyhledáváme nejbližší bod v kd-stromu nebo pokud počítáme průměrnou vzdálenost od všech bodů.} 
+\label{table:podminka-vzdalenosti}
+\end{table}
+
+Druhou problematickou částí procesu je postupné vybírání bodů z akumulátorového pole. Jak jsem již zmínil, pokud začneme vybírat body z vrcholu, testujeme, zda jsou ve stejné rovině a blízko u sebe. Může ale nastat situace, kdy jsou dva vrcholy v akumulátorovém těsně vedle sebe a při vybírání z prvního vrcholu splní tuto podmínku i některé body z druhého vrcholu (tedy i z druhé roviny). Ukázka takové situace je znázorněna na obrázku \ref{fig:chyba-clustering}.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/chyba-clustering}
+\caption{Ukázka chyby, která může nastat při postupném vybírání bodů z akumulátorového pole, pokud dvě roviny vytvoří blízké vrcholy v akumulátorovém poli.}
+\label{fig:chyba-clustering}
+\end{center}
+\end{figure}
+
+Řešení vůbec není jednoduché, nepodařilo se mi najít žádný způsob, kterým by šel tento problém detekovat a výrazně to nezhoršilo výkon algoritmu. Proto je nutné tento problém obejít a případně aspoň co nejvíce minimalizovat. Jedním ze způsobů, jak omezit výskyt takové situace, je nevybírat vrcholy z akumulátorového pole po jednom, ale vybírat všechny vrcholy po částech. Protože vybírání bodů z vrcholu je iterativní proces, implementace postupného vybírání všech vrcholů najednou je poměrně jednoduchá. Implementace bude taková, že budeme iterativně procházet jednotlivé vrcholy. V první iteraci vybereme z akumulátorového pole nejvyšší políčka ze všech vrcholů. V druhé itraci rozšíříme vyhledávání v každém vrcholu o okolní buňky (viz Obr. \ref{fig:acc-pole-clus}). Proces je tedy téměř stejný, jako byl původně navržený, jen nevybíráme jeden vrchol po druhém, ale iterativně je vybíráme všechny najednou.
+
+Nyní máme navržený celý proces klastrování, tak podrobněji popíšeme implementaci. Vrcholy v poli jsme již nalezli a máme uložené souřadnice všech nejvyšších políček z vrcholů. Protože budeme přidávat body do všech segmentů najedou, budeme potřebovat nějakou datovou strukturu, která nám bude udržovat body ze segmentu, společně s dalšími informacemi. Vytvoříme tedy třídu SegmentWrapper, která bude obsahovat souřadnice vrcholu, všechny body, které do segmentu patří, dále bude ukládat aktuální RMS, průměrnou vzdálenost mezi body a booleovskou hodnotu, která bude určovat, zda je segment již uzavřený nebo jestli do něj ještě přidáváme body.
+
+ 
 
 \section{Struktura a použití zdrojového kódu}
 
@@ -605,6 +639,7 @@ Nyní je tedy potřeba navrhnout algoritmus, který takové vrcholy v poli vyhle
 Tady bych jen tak nastínil hlavní části toho zdrojáku ve vztahu k tomu předchozímu popisu\ldots
 
 \subsection{Ukázkové použití algoritmu}
+\label{sub:pouziti}
 
 %*****************************************************************************
 \chapter{Testování}
