@@ -221,7 +221,7 @@ složeny z relativně malého počtu velkých rovin (tedy stěny, střechy apod.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics[height=10cm]{figures/1-1-segmentace}
+\includegraphics[height=10cm]{figures/ukazka-segmentace}
 \caption{Ukázková scéna (nahoře) a její planární segmentace (dole).}
 \label{fig:ukazkova-scena}
 \end{center}
@@ -229,14 +229,14 @@ složeny z relativně malého počtu velkých rovin (tedy stěny, střechy apod.
 
 Segmentační metody můžeme hrubě rozdělit do dvou základních kategorií \cite{Voss04}. Jednak jsou to metody, které segmentují na základě vlastností jako je vzdálenost bodů v prostoru a případně podobnost lokálně odhadnutých normál. Sem spadají např. metody, jako je segmentace na základě skenovacích linií\footnote{V anglické literatuře se označuje jako \uv{scan line segmentation} \cite{Voss04}} nebo surface growing. První zmíněná metoda vychází z toho, že data jsou pořizována postupně podél skenovacích linií. Body v těchto liniích jsou nejprve rozděleny do rovných přímek a poté jsou ve 3D prostoru na základě podobných atributů slučovány do jednotlivých segmentů. Surface growing algoritmy fungují tak, že je vybrán rovinný či nerovinný prvek (seed region) a ten je poté postupně spojován s blízkými body, které mají podobné atributy. Tato metoda je ale silně závislá na volbě vhodného původního prvku.
 
-Do druhé kategorie spadají metody, které přímo odhadují parametry roviny na základě shlukování bodů a vyhledávání lokálních maxim v prostoru parametrů. Sem patří např. rozšíření Houghovi transformace pro 3D prostor. Jeden bod v mračnu, který se nachází na ploše v objektovém prostoru definuje rovinu v prostoru parametrů. Body na stejné ploše mají poté podobné parametry (vzdálenost od počátku a naklonění rovinny) a na základě těchto paramterů jsou poté shlukovány. Jednotlivé shluky bodů pak podle dalších kritérií vytvoří jeden segment. Tato a další podobné metody mají zejména výpočetní problémy, protože mají velké paměťové nároky. Obvyklým problémem obou výše zmíněných kategorií je fakt, že jednotlivé metody se často zaměřují pouze na specifický typ vstupních dat (letecké skeny nebo pozemní skeny).
+Do druhé kategorie spadají metody, které přímo odhadují parametry roviny na základě shlukování bodů a vyhledávání lokálních maxim v prostoru parametrů. Sem patří např. rozšíření Houghovi transformace pro 3D prostor. Jeden bod v mračnu, který se nachází na ploše v objektovém prostoru definuje rovinu v prostoru parametrů. Body na stejné ploše mají poté podobné parametry (vzdálenost od počátku a naklonění roviny) a na základě těchto paramterů jsou poté shlukovány. Jednotlivé shluky bodů pak podle dalších kritérií vytvoří jeden segment. Tato a další podobné metody mají zejména výpočetní problémy, protože mají velké paměťové nároky. Obvyklým problémem obou výše zmíněných kategorií je fakt, že jednotlivé metody se často zaměřují pouze na specifický typ vstupních dat (letecké skeny nebo pozemní skeny).
 
-Článek \cite{Seg01} navrhuje řešení, které zohledňuje jak podobnost bodů v protstoru atributů, tak vzdálenost bodů v objektovém prostoru. Zároveň snižuje počet atributů pro vyšší efektivitu a menší paměťové nároky. Dále by také metoda neměla být závislá na typu vstupních dat.
+Článek \cite{Seg01} navrhuje řešení, které zohledňuje jak podobnost bodů v prostoru atributů, tak vzdálenost bodů v objektovém prostoru. Zároveň snižuje počet atributů pro vyšší efektivitu a menší paměťové nároky. Dále by také metoda neměla být závislá na typu vstupních dat.
 
 
 \section{Struktura práce}
 
-Tato práce nejprve popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02} a věnuje se návrhu obou implementací. Poté následuje část popisující samotnou implementaci algoritmů. Algoritmy jsou implementovány v rámci dodaného nástroje ArchiRec3D \cite{AR3D}, který je psaný v jazyku Java. V závěrečné části práce je otestována správná funkčnost obou algoritmů na uměle generovaných datech a na reálných datech je otestována kvalita algoritmů a jejich implementací. V závěru jsou  shrnuty výsledky testování a analyzovány nedostatky algoritmů. Je zda také zhodnoceno, zda jsou nedostatky způsobeny návrhem algoritmu nebo jeho implementací.
+Tato práce nejprve v kapitole \ref{chap:analyza} popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02} a věnuje se návrhu obou implementací. Poté následuje kapitola \ref{chap:implementace} popisující samotnou implementaci algoritmů. Algoritmy jsou implementovány v rámci dodaného nástroje ArchiRec3D \cite{AR3D}, který je psaný v jazyku Java. V závěrečné části práce v kapitole \ref{chap:test} je otestována správná funkčnost obou algoritmů na uměle generovaných datech a na reálných datech je otestována kvalita algoritmů a jejich implementací. V závěru jsou  shrnuty výsledky testování a analyzovány nedostatky algoritmů. Je zda také zhodnoceno, zda jsou nedostatky způsobeny návrhem algoritmu nebo jeho implementací.
 
 
 %*****************************************************************************
@@ -251,39 +251,40 @@ Tato práce nejprve popisuje zadané algoritmy \cite{Seg01} a \cite{Seg02} a vě
 
 %*****************************************************************************
 \chapter{Analýza a návrh řešení}
+\label{chap:analyza}
 
 \section{Segmentace na základě velikosti normálového vektoru}
 
-Navržený proces segmentace v článku \cite{Seg01} zahrnuje tři hlavní kroky - definice okolí, výpočet atributů a klastrování bodů. Definice okolí bodu bere v úvahu 3D vzdálenost mezi body a tvar povrchu, na kterém se bod nachází. Atributy daného bodu jsou poté vypočteny na základě tohoto definovaného okolí, pro nižší paměťové nároky jsou pro každý bod použity pouze dva parametry. Po vypočtení parametrů je provedeno klastrování bodů ležících na stejné ploše, které zohledňuje jak podobnost v prostoru atributů, tak vzdálenost bodů v prostoru.
+Navržený proces segmentace v článku \cite{Seg01} zahrnuje tři hlavní kroky - definici okolí, výpočet atributů a klastrování bodů. Definice okolí bodu bere v úvahu 3D vzdálenost mezi body a tvar povrchu, na kterém se bod nachází. Parametry daného bodu jsou poté vypočteny na základě tohoto definovaného okolí. Pro nižší paměťové nároky jsou pro každý bod použity pouze dva parametry. Po vypočtení parametrů je provedeno klastrování bodů ležících na stejné ploše, které zohledňuje jak podobnost v prostoru parametrů, tak vzdálenost bodů v prostoru.
 
 \subsection{Adaptivní válcová definice okolí} 
 \label{sub:def-okoli}
 
 Správná definice okolí bodu je zásadní podmínkou pro správnou funkčnost algoritmu, protože okolí bodu přímo ovlivňuje parametry, které jsou pro daný bod vypočteny. V tomto algoritmu je okolí definováno tak, že bere v úvahu vzdálenost bodů v prostoru, ale zároveň také tvar povrchu, na kterém se bod nachází. To znamená, že do okolí jsou zahrnuty pouze takové body, které jsou prostorově blízko, ale zároveň leží na stejné ploše.
 
-Proces definice okolí je znázorněn v diagramu na obrázku \ref{fig:diagram-okoli}. Prvním krokem je vytvořit kouli se středem v bodu, pro který okolí definujeme. Poloměr koule volíme takový, aby koule obsahovala dostatečný počet bodů pro spolehlivý výpočet parametrů. Tuto hodnotu nejde přesněji specifikovat, musí být odvozena z konkrétního mračna bodů, které zpracováváme\footnote{Nicméně praxe ukazuje, že vhodná volba jsou řádově desítky až stovky bodů uvnitř koule.}. Body, které leží uvnitř této koule, proložíme pomocí metody nejmenších čtverců výchozí rovinnou (viz Obr. \ref{fig:definice-okoli}). Poté, co je rovina proložena, vypočítáme pro každý bod v kouli jeho vzdálenost od této roviny. Inverzi této vzdálenosti použijeme v další iteraci jako váhu bodu\footnote{Jednoduše řečeno, čím je bod od plochy dál, tím je jeho váha nižší.}, jak můžeme vidět v rovnici \ref{eq:vypocet-vahy}:
+Proces definice okolí je znázorněn v diagramu na obrázku \ref{fig:diagram-okoli}. Cílem tohoto procesu je získat lokální okolí zkoumaného bodu, konkrétně blízké sousední body ležící ve stejné rovině. Na základě toho okolí jsou poté pro každý bod vypočteny parametry, které slouží pro následné klastrování bodů. Prvním krokem při definici okolí je vytvořit kouli se středem v bodu, pro který okolí definujeme. Poloměr koule volíme takový, aby obsahovala dostatečný počet bodů pro spolehlivý výpočet parametrů. Tuto hodnotu nejde přesněji specifikovat, musí být odvozena z konkrétního mračna bodů, které zpracováváme\footnote{Nicméně praxe ukazuje, že vhodná volba jsou řádově desítky až stovky bodů uvnitř koule.}. Poté vezmeme všechny body, které leží uvnitř této koule, a proložíme je pomocí metody nejmenších čtverců výchozí rovinou (viz Obr. \ref{fig:definice-okoli} (a)). Poté, co je rovina proložena, vypočítáme pro každý bod v kouli jeho vzdálenost od této roviny. Inverzi této vzdálenosti použijeme v další iteraci jako váhu bodu\footnote{Jednoduše řečeno, čím je bod od plochy dál, tím je jeho váha nižší.}, jak můžeme vidět v rovnici \ref{eq:vypocet-vahy}:
 
 \begin{equation}
-p_i = 1/d_i
+p_i = \frac{1}{d_i}
 \label{eq:vypocet-vahy}
 \end{equation}
 
 \noindent
-kde $p_i$ značí váhu i-tého bodu a  $d_i$ je vzdálenost bodu od proložené roviny. Tento proces \uv{převažování roviny} se iterativně opakuje, dokud se roviny v rámci iterací již nemění nebo dokud není dosaženo daného počtu iterací (např. 10). Poté je rovnoběžně nad a pod výslednou rovinou definován buffer. Velikost tohoto bufferu je závislá na očekávané velikosti šumu ve vstupních datech. Body, které jsou uvnitř tohoto bufferu, tvoří výsledné okolí (viz Obr. \ref{fig:definice-okoli}(b)). Ostatní body mimo buffer se již na okolí nijak nepodílejí.
+kde $p_i$ značí váhu i-tého bodu a  $d_i$ je vzdálenost bodu od proložené roviny. Tím jsme pro každý bod v okolí získali váhu. Nyní okolí znovu proložíme rovinou, ale vezmeme v úvahu vypočtené váhy. Tento proces \uv{převažování roviny} se iterativně opakuje, dokud se roviny v rámci iterací již nemění nebo dokud není dosaženo daného počtu iterací (např. 10). Poté je rovnoběžně nad a pod výslednou rovinou definován buffer. Velikost tohoto bufferu je závislá na očekávané velikosti šumu ve vstupních datech. Body, které jsou uvnitř tohoto bufferu, tvoří výsledné okolí (viz Obr. \ref{fig:definice-okoli}(b)). Ostatní body mimo buffer se již na okolí nijak nepodílejí.
 
 \begin{figure}[ht]
 \begin{center}
-\includegraphics[width=\textwidth]{figures/2-2-definice-okoli}
+\includegraphics[width=\textwidth]{figures/definice-okoli}
 \caption{Definice okolí bodu (boční pohled).\newline (a) zobrazuje proložení původní roviny body uvnitř koule. Pro některé body je znázorněna jejich váha $d_i$.\newline (b) znázorňuje výslednou rovinu po iterativním procesu, který zahrnuje váhy jednotlivých bodů. Výsledné okolí tvoří modře vyznačené body uvnitř bufferu.}
 \label{fig:definice-okoli}
 \end{center}
 \end{figure}
 
-Výsledné okolí se tedy nachází v útvaru, který téměř odpovídá nízkému válci, jehož osa je normála k ploše, na které se původní bod nachází. Tato osa navíc může být v průběhu algoritmu oproti výchozí hodnotě značně upravena, proto je tato metoda pojmenována adaptivní válcová definice okolí. 
+Výsledné okolí se tedy nachází v útvaru, který téměř odpovídá nízkému válci, jehož osa je normála k ploše, na které se původní bod nachází. Tato osa navíc může být v průběhu algoritmu oproti výchozí hodnotě značně upravena, proto je tato metoda označena jako adaptivní válcová definice okolí. 
 
-\begin{figure}[htp]
+\begin{figure}[ht]
 \begin{center}
-\includegraphics[width=\textwidth]{figures/2-1-okoli-diagram}
+\includegraphics[width=\textwidth]{figures/okoli-diagram}
 \caption{Diagram aktivit znázorňující proces definice okolí bodu.}
 \label{fig:diagram-okoli}
 \end{center}
@@ -292,14 +293,14 @@ Výsledné okolí se tedy nachází v útvaru, který téměř odpovídá nízk�
 \newpage
 \subsection{Výpočet parametrů bodu}
 
-Atributy bodu jsou, jak již bylo zmíněno, vypočítány na základě okolí bodu. Pokud zavedeme do mračna bodů nějaký referenční bod, můžeme definovat normálový vektor z tohoto bodu na rovinu, na které se daný bod nachází. Většina metod, které provádějí klastrování na základě vypočtených parametrů, využívá hlasování do akumulátorového pole vytvořeného v prostoru parametrů. Rozměry akumulátorového pole závisí na počtu použitých parametrů. Můžeme tedy použít 3 složky normálového vektoru jako atributy a tím zajistíme, že všechny segmenty budou správně rozeznány\footnote{Mělo by být zjevné, že jeden normálový vektor jednoznačne definuje rovinu.}. Nicméně takovýto způsob vyžaduje vytvoření třírozměrného akumulátorového pole a hlasování do 3D pole je výpočetně náročná operace. 
+Parametry bodu jsou, jak již bylo zmíněno, vypočítány na základě okolí bodu. Pokud zavedeme do mračna bodů nějaký referenční bod, můžeme definovat normálový vektor z tohoto bodu na rovinu, na které se daný bod nachází. Většina metod, které provádějí klastrování na základě vypočtených parametrů, využívá hlasování do akumulátorového pole vytvořeného v prostoru parametrů. Rozměry akumulátorového pole závisí na počtu použitých parametrů. Můžeme tedy použít 3 složky normálového vektoru jako atributy a tím zajistíme, že všechny segmenty budou správně rozeznány\footnote{Mělo by být zjevné, že jeden normálový vektor jednoznačne definuje rovinu.}. Nicméně takovýto způsob vyžaduje vytvoření třírozměrného akumulátorového pole a hlasování do 3D pole je výpočetně náročná operace. 
 
-Pro snížení výpočetních nároků je tedy nutné snížit počet parametrů. Proto je jako atribut využita velikost normálového vektoru\footnote{Myšlen je konkrétně ten normálový vektor, který začíná v daném referenčním bodu - jde tedy o vzdálenost roviny od bodu.}. Toto řešení přináší ale nebezpečí v tom, že může existovat více rovin ve stejné vzdálenosti od referenčního bodu a v takovém případě by několik rovin splynulo do jednoho segmentu. Jako řešení je zaveden druhý referenční bod a tedy i druhý atribut. Tím se značně snižuje riziko situace, kdy by více rovin mělo stejnou vzdálenost od dvou různých bodů. Obrázek \ref{fig:normal-def} (a) schématicky znázorňuje situaci, kdy mají dvě plochy stejnou vzdálenost od jednoho bodu, ale různou vzdálenost od druhého bodu, každá rovina bude mít tedy jiný pár parametrů. Na obrázku \ref{fig:normal-def} (b) jsou znározněny hlasy jednotlivých rovin zaznamenané v akumulátorovém poli. Všechny body jsou v poli zaznamenány na základě těchto dvou vypočtených parametrů. Body, které patří do různých rovin, jsou tedy v akumulátorovém poli umístěné na různých místech. Hlavní výhodou tohoto řešení je tedy to, že jsme snížili počet parametrů definujích rovinu a tím také ubrali jeden rozměr akumulátorového pole.
+Pro snížení výpočetních nároků je tedy nutné snížit počet parametrů. Proto je jako atribut využita velikost normálového vektoru\footnote{Tedy jde o vzdálenost roviny od referenčního bodu.}. Toto řešení přináší ale nebezpečí v tom, že může existovat více rovin ve stejné vzdálenosti od referenčního bodu a v takovém případě by několik rovin splynulo do jednoho segmentu. Jako řešení je zaveden druhý referenční bod a tedy i druhý parametr. Tím se značně snižuje riziko situace, kdy by více rovin mělo stejnou vzdálenost od dvou různých bodů. Obrázek \ref{fig:normal-def} (a) schématicky znázorňuje situaci, kdy mají dvě roviny stejnou vzdálenost od jednoho bodu, ale různou vzdálenost od druhého bodu, každá rovina bude mít tedy jiný pár parametrů. Na obrázku \ref{fig:normal-def} (b) jsou znázorněny hlasy jednotlivých rovin zaznamenané v akumulátorovém poli. Všechny body jsou v poli zaznamenány na základě těchto dvou vypočtených parametrů. Body, které patří do různých rovin, jsou tedy v akumulátorovém poli umístěné na různých místech. Hlavní výhodou tohoto řešení je tedy to, že jsme snížili počet parametrů definujících rovinu a tím také ubrali jeden rozměr akumulátorového pole.
 
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/definice-normal}
-\caption{Schématické znároznění situace, kdy jsou dvě roviny stejně vzdálené od bodu A, ale různě vzdálené od bodu B (a), zaznamenané hlasy v akumulátorovém poli (b).}
+\caption{Schématické znázornění situace, kdy jsou dvě roviny stejně vzdálené od bodu A, ale různě vzdálené od bodu B (a), zaznamenané hlasy v akumulátorovém poli (b). Vzdálenost roviny od bodu A je značena jako $d_A$, od bodu B jako $d_B.$}
 \label{fig:normal-def}
 \end{center}
 \end{figure}
@@ -338,12 +339,14 @@ $$
 \end{equation}
 \end{center}
 
-Umístěním referenčních bodů do těchto pozic značně snižujeme možnost, že se více rovin zobrazí na stejné místo v akulátorovém poli. Nicméně pořád existuje možnost, že atributy dvou rozdílných rovin budou stejné nebo velmi podobné. Navíc v reálné situaci nebudou nikdy parametry všech bodů na jedné rovině stejné, ale budou v akumulátorovém poli rozptýlené ve více přilehlých políčkách. Tím se zvyšuje šance, že mohou v akumulátorovém poli dvě či více rovin splynout v jeden vrchol, který by poté byl reprezentován jako jeden segment. Proto nemůže být tato možnost ignorována a je potřeba data dále zpracovat. Tento proces detekce problému a jeho řešení je implementován v následující části, tedy v klastrování bodů.
+Umístěním referenčních bodů do těchto pozic značně snižujeme možnost, že se více rovin zobrazí na stejné místo v akumulátorovém poli. Nicméně pořád existuje možnost, že parametry dvou rozdílných rovin budou stejné nebo velmi podobné. Navíc v reálné situaci nebudou nikdy parametry všech bodů na jedné rovině stejné, ale budou v akumulátorovém poli rozptýlené ve více přilehlých políčkách. Tím se zvyšuje šance, že mohou v akumulátorovém poli dvě či více rovin splynout v jeden vrchol, který by poté byl reprezentován jako jeden segment. Proto nemůže být tato možnost ignorována a je potřeba data dále zpracovat. Tento proces detekce problému a jeho řešení je implementován v následující části, tedy v klastrování bodů.
+
+Výpočet parametrů bodu prbíhá konkrétně tak, že výsledným okolím bodu proložíme rovinu. Vypočítáme vzdálenost této roviny od obou refenčních bodů a tím získáme dvojici parametrů bodu. Na základě těchto parametrů je poté bod uložen do akumulátorového pole.
 
 \subsection{Klastrování bodů}
 \label{sub:analyza-klastrovani}
 
-Pokud máme vypočteny pozice obou referenčních bodů, můžeme spočítat parametry všech bodů v mračnu a lužit je do akumulátorového pole. Poté může být provedeno klastrování bodů. Body, které patří do různých rovin v objektovém rostoru, vytvoří různé vrcholy v prostoru parametrů. Na obrázku \ref{fig:acc-pole} je znázorněn příklad takové situace. Mračno bodů, které obsahuje tři kolmé roviny, vytvoří pomocí hlasování v akumulátorovém poli tři různé vrcholy.
+Pokud máme vypočteny pozice obou referenčních bodů, můžeme spočítat parametry všech bodů v mračnu a uložit je do akumulátorového pole. Poté může být provedeno klastrování bodů. Body, které patří do různých rovin v objektovém prostoru, vytvoří různé vrcholy v prostoru parametrů. Na obrázku \ref{fig:acc-pole} je znázorněn příklad takové situace. Mračno bodů, které obsahuje tři kolmé roviny, vytvoří pomocí hlasování v akumulátorovém poli tři různé vrcholy.
 
 \begin{figure}[ht]
 \begin{center}
@@ -353,7 +356,7 @@ Pokud máme vypočteny pozice obou referenčních bodů, můžeme spočítat par
 \end{center}
 \end{figure}
 
-Pokud máme všechny body uloženy v akumulátorovém poli, vyhledáme buňku s největším počtem bodů (tedy nejvyšší vrchol). Velikost buňky v akumulátorovém poli je určena na základě velikosti šumu ve vstupním mračnu. Tyto body z nejvyššího vrcholu proložíme rovinou pomocí metody nejmenších čtverců. Poté ohodnotíme kvalitu roviny výpočtem efektivní hodnoty (anglicky root main square, dále jen RMS) vzdáleností všech bodů od proložené roviny. Pokud máme množinu $n$ bodů $\left\{x_1, x_2, \ldots , x_n\right\}$ a jejich vzdáleností od proložené roviny $\left\{d_1, d_2, \ldots , d_n\right\}$, vypočítáme RMS podle vztahu \ref{eq:rms}:
+Pokud máme všechny body uloženy v akumulátorovém poli, vyhledáme buňku s největším počtem bodů (tedy nejvyšší vrchol). Velikost buňky v akumulátorovém poli je určena na základě velikosti šumu ve vstupním mračnu. Tyto body z nejvyššího vrcholu proložíme rovinou pomocí metody nejmenších čtverců. Poté ohodnotíme kvalitu roviny výpočtem efektivní hodnoty (anglicky root mean square, dále jen RMS) vzdáleností všech bodů od proložené roviny. Pokud máme množinu $n$ bodů $\left\{x_1, x_2, \ldots , x_n\right\}$ a jejich vzdáleností od proložené roviny $\left\{d_1, d_2, \ldots , d_n\right\}$, vypočítáme RMS podle vztahu \ref{eq:rms}:
 
 \begin{equation} 
 \label{eq:rms}
@@ -364,7 +367,7 @@ rms = \sqrt{
 
 Přijatelná hodnota je závislá na velikosti šumu v datech, obecně lze říct, že kvalita roviny je dostatečná, pokud je vypočtené RMS menší, než velikost šumu v datech. Pokud je RMS větší, pravděpodobně jsme detekovali výše popsaný problém, kdy více rovin splynulo v akumulátorovém poli do jednoho segmentu. Řešení tohoto problému bude popsáno ke konci této sekce.
 
-Pokud je tedy vypočtené RMS v přijatelných mezích, vytvoříme počáteční klastr, do kterého dáme všechny body dané buňky. Klastrování pokračuje body, které do této buňky nepatří, ale jsou v jejím okolí. Tento krok je nezbytný, protože data obvykle nebývají tak přesná, aby se všechny body z roviny trefily přesně na jedno místo v akumulátorovém poli, zejména jde o body v okolí hran. Tento postup probíhá iterativně a funguje tak, že v první iteraci je identifikováno 8 buňek v sousedství buňky s největším počtem bodů (viz Obr. \ref{fig:acc-pole-clus}).  Body z těchto osmi buněk přidáme do segmentu pouze, pokud splní dvě podmínky. První podmínkou je, že bod musí být prostorově blízko k bodům z původního klastru (např. 2x průměrná vzdálenost mezi body v původním klastru). Poté je spočítána vzdálenost bodů od roviny, která je definována body z původního clusteru. Pouze body, které jsou blíže, než je předem daný práh, mohou být přidány do klastru. Tento práh je opět určet v závislosti na velikosti šumu v datech.  Body, které nesplnily jednou z těchto dvou podmínek zůstanou na své pozici v akumulátorovém poli a jsou znovu posouzeny v dalších iteracích. Pokud jsou do klastru přidány všechny body, které splňují obě podmínky, přepočítají se parametry klastru - tedy opět se body proloží rovina, ale jsou zahrnuty i nově přidané body. Poté proces pokračuje druhou iterací. V té jsou procházeny body z 24 sousedních buněk (viz Obr. \ref{fig:acc-pole-clus}). Proces je navržen tak, aby v této iteraci byly opět procházeny i ty body, které neprošly podmínkami v první iteraci. Protože se na konci každé iterace přepočítavají parametry, mohou být tyto body v dalších iteracích do klastru zahrnuty. Takto iterativně proces pokračuje až do té doby, než do klastru nemohou být přidány žádné nové body. V tu chvíli je klastr zaznamenán a všechny jeho body jsou odebrány z akumulátorového pole.
+Pokud je tedy vypočtené RMS v přijatelných mezích, vytvoříme počáteční klastr, do kterého dáme všechny body dané buňky. Klastrování pokračuje body, které do této buňky nepatří, ale jsou v jejím okolí. Tento krok je nezbytný, protože data obvykle nebývají tak přesná, aby se všechny body z roviny trefily přesně na jedno místo v akumulátorovém poli, zejména jde o body v okolí hran a nerovností na povrchu. Tento postup probíhá iterativně a funguje tak, že v první iteraci je identifikováno 8 buněk v sousedství buňky s největším počtem bodů (viz Obr. \ref{fig:acc-pole-clus}). 
 
 \begin{figure}[ht]
 \begin{center}
@@ -374,9 +377,12 @@ Pokud je tedy vypočtené RMS v přijatelných mezích, vytvoříme počátečn�
 \end{center}
 \end{figure}
 
+\noindent
+Body z těchto osmi buněk přidáme do segmentu pouze, pokud splní dvě podmínky. První podmínkou je, že bod musí být prostorově blízko k bodům z původního klastru (např. 2x průměrná vzdálenost mezi body v původním klastru). Poté je spočítána vzdálenost bodů od roviny, která je definována body z původního clusteru. Pouze body, které jsou k rovině blíže, než je předem daný práh, mohou být přidány do klastru. Tento práh je opět určit v závislosti na velikosti šumu v datech.  Body, které nesplnily jednou z těchto dvou podmínek zůstanou na své pozici v akumulátorovém poli a jsou znovu posouzeny v dalších iteracích. Po ukončení každé iterace se přepočítají parametry klastru - tedy opět se body proloží rovina, ale jsou zahrnuty i nově přidané body. Poté proces pokračuje druhou iterací. V té jsou procházeny body z 24 sousedních buněk (viz Obr. \ref{fig:acc-pole-clus}). Proces je navržen tak, aby v této iteraci byly opět procházeny i ty body, které neprošly podmínkami v první iteraci. Protože se na konci každé iterace přepočítávají parametry, mohou být tyto body v dalších iteracích do klastru zahrnuty. Takto iterativně proces pokračuje až do té doby, než do klastru nemohou být přidány žádné nové body. V tu chvíli je klastr zaznamenán a všechny jeho body jsou odebrány z akumulátorového pole.
+
 Nyní proces pokračuje k druhému nejvyššímu vrcholu v akumulátorovém poli, který je nalezen stejným způsobem, jako byl ten nejvyšší v předchozí iteraci. Poté se opakují stejné kroky, jako v předchozím případě. Celý tento proces přesouvání se od nejvyššího vrcholu k druhému nejvyššímu pokračuje až do té doby, dokud je velikost nejvyššího vrcholu větší, než předdefinovaná hranice.
 
-Poslední součástí algoritmu je řešení situace, kdy více rovin sdílí stejný vrchol v akumulátorovém poli. Tuto situaci jsme již detekovali pomocí výpočtu RMS. Pokud je vypočetné RMS příliš vysoká, s velkou pravděpodobností jsou ve vrcholu body z více různých rovin. V takovém případě jsou definovány dva nové referenční body. Pozice nových referenčních bodů je definovaná podle vztahu \ref{eq:new-origins}:
+Poslední součástí algoritmu je řešení situace, kdy více rovin sdílí stejný vrchol v akumulátorovém poli. Tuto situaci jsme již detekovali pomocí výpočtu RMS. Pokud je hodnota vypočetného RMS příliš vysoká, s velkou pravděpodobností jsou ve vrcholu body z více různých rovin. V takovém případě jsou definovány dva nové referenční body. Pozice nových referenčních bodů je definovaná podle vztahu \ref{eq:new-origins}:
 
 \begin{center}
 \begin{equation} 
@@ -405,9 +411,9 @@ $$
 \noindent
 kde ($X_n$, $Y_n$, $Z_n$) jsou souřadnice nového bodu, ($X_o$, $Y_o$, $Z_o$) jsou souřadnice původního bodu, $range$ je hodnota určující jak nejdál může být nový bod posunut (např. 5m) a $rand$ je náhodná hodnota z intervalu (0,1).
 
-Poté je definováno malé akumulátorové pole pouze pro tyto body (způsobující problém) a na základně nově definovaných referenčních bodů jsou přepočteny atributy bodů. Poté jsou vyhledány nově vytvořené vrcholy a ty jsou klastrovány stejným způsobem, jako v běžném případě. tento proces se opakuje do té doby, než jsou nalezeny dostatečně kvalitní roviny. V případě, že do určitého počtu iterací (např. 10) není nalezena žádná přijatelná rovina, vezme se druhá nejvyšší buňka ze zpracovávaného vrcholu v původním poli, proloží se rovinou a ohodnotí se její kvalita výpočtem RMS. Poté proces pokračuje standardně jednotlivými kroky, které již byly popsané.
+Poté je definováno nové akumulátorové pole pouze pro tyto body (způsobující problém) a na základně nově definovaných referenčních bodů jsou přepočteny parametry bodů. Poté jsou vyhledány nově vytvořené vrcholy a ty jsou klastrovány stejným způsobem, jako v běžném případě. Tento proces se opakuje do té doby, než jsou nalezeny dostatečně kvalitní roviny. V případě, že do určitého počtu iterací (např. 10) není nalezena žádná přijatelná rovina, vezme se druhá nejvyšší buňka ze zpracovávaného vrcholu v původním poli, proloží se rovinou a ohodnotí se její kvalita výpočtem RMS. Poté proces pokračuje standardně jednotlivými kroky, které již byly popsané.
 
-Tímto jsme popsali celý algoritmus. Jak by mělo být patrné, algortimus bere v úvahu vztahy bodů v prostoru parametrů a zároveň jejich vzdálenost v prostoru. navíc je tento algoritmus poměrně robustní, protože při klastrování mají prioritu body, které mají podobnější parametry a zároveň jsou blízko v prostoru, před body, jejichž parametry jsou více odlišné.
+Tímto jsme popsali celý algoritmus. Jak by mělo být patrné, algortimus bere v úvahu vztahy bodů v prostoru parametrů a zároveň jejich vzdálenost v prostoru. Navíc je tento algoritmus poměrně robustní, protože při klastrování mají prioritu body, které mají podobnější parametry a zároveň jsou blízko v prostoru, před body, jejichž parametry jsou více odlišné.
 
 
 \section{Segmentace pomocí vyhledávání dominantních os}
@@ -462,13 +468,14 @@ d = -(n_1c_1 + n_2c_2 + n_3c_3)
 Toto řešení předpokládá, že všechny body mají stejnou váhu. Pokud máme pro body různé váhy, do výpočtu je zahrneme poměrně jednoduše. Pokud má bod $p_i$ váhu $w_i$, musíme vztah \ref{eq:ls-min} upravit tímto způsobem:
 
 \begin{equation}
-\min_{w_i,c,\|n\|=1} \sum\limits_{i=1}^k w_i (\times n (p_i - c)^T)^2
+\min_{w_i,c,\|n\|=1} \sum\limits_{i=1}^k w_i \times (n (p_i - c)^T)^2
 \end{equation}
 
 Stejně musíme upravit definici matice $M$, která bude v každém řádku obsahovat hodnoty $w_i \times (p_i - c)$. Ostatní postup však zůstává stejný.
 
 %*****************************************************************************
 \chapter{Implementace}
+\label{chap:implementace}
 
 Tato kapitola se zabývá popisem implementace obou algoritmů. Algoritmy jsou implementovány v jazyce Java v rámci dodaného softwaru ArchiRec3D \cite{AR3D}. Kompletní zdrojový kód je k dispozici na přiloženém CD, viz kapitla~\ref{chap:CD}.
 
@@ -480,15 +487,15 @@ Implementaci tohoto algoritmu můžeme rozdělit na dvě hlavní části. První
 
 Tato část algoritmu bude procházet všechny body, na základě jejich okolí bude vypočítávat parametry, podle kterých budou body uloženy do akumulátorového pole. Vstupem bude tedy mračno bodů a výstupem akumulátorové pole. Prvním problémem bude tedy to, jak v paměti správě reprezentovat obě tyto struktury. To se samozřejmě musí odvíjet od operací, které budeme s daty provádět. Protože algoritmus implementuji v rámci dodaného nástroje, mám k dispozici několik základních datových struktur jako např \verb|vicitis.inner.Point3D| pro reprezentaci 3D bodu, \verb|vicitis.inner.Plane3D| pro reprezenatci roviny apod., tak samozřejmě tyto datové struktury využiji. Navíc je zde také implementováno mnoho vhodných metod využívajících tyto třídy, takže je logické použít již funkční řešení a nevymýšlet vlastní, které by bylo navíc duplicitní.
 
-Základním požadavkem na datovou strukturu reprezentující mračno bodů je možnost vyhledávat sousední body v 3D prostoru. Protože tuto operaci je nutné provádět pro každý bod, je důležité, aby byla tato operace co nejrychlejší. Naopak vytváření struktury se bude provádět pouze jednou a už do ní nebudeme za běhu přidávat ani odebírat body, takže na tyto operace nemusí být kladeny velké nároky. Pro tyto účely se nejčastěji využívají stromy, které umožňují rekurzivní dělení n-dimenzionálního prostoru na menší podprostory. Jedním z takovýchto algoritmů je octree, který rekurzivně dělí prostor na 8 podprostroů. Podobný algoritmus je kd-strom \cite{wiki:kdtree}, kde jednotlivé uzly jsou k-dimenzionální body. Tento typ stromu dělí prostor na podprostory podél těchto jednotlivých dimenzí. Pokud srovnáme tyto dva algoritmy, tak octree se rychleji staví a zároveň umí jednoduše přidávat nové body do již postaveného stromu. Oproti tomu do kd-stromu se body za běhu přidávají mnohem složitěji, ale algoritmus je efektivnější pro vyhledávání bodů a nejbližších sousedů. Protože jsem určil rychlé vyhledávání nejbližších sousedů jako nejdůležitější kritérium, vybral jsem nakonec pro reprezentaci mračna bodů kd-strom. Vyhledání nejbližšího souseda v kd-stromu (o $n$ prvcích a $k$ dimenzích) má v nejlepším případě asymptotickou složitost $O(log~n)$ a v nejhorším případě $O(k \times n^{1-\frac{1}{k}})$, ve většině případů má však složitost blíže k nejlepšímu případu. Podrobný popis kd-stromu je k dispozici v \cite{wiki:kdtree}. Samozřejmě implementace kd-stromu je poměrně složitá, obzvláště, pokud má být co nejefektivnější. Proto jsem se rozhodl pro použití knihovny. Po vyzkoušení několika různých knihoven byla jednoznačně nejrychlejíší implementace \cite{kdtree}, kterou jsem použil.
+Základním požadavkem na datovou strukturu reprezentující mračno bodů je možnost vyhledávat sousední body v 3D prostoru. Protože tuto operaci je nutné provádět pro každý bod, je důležité, aby byla co nejrychlejší. Naopak vytváření struktury se bude provádět pouze jednou a už do ní nebudeme za běhu přidávat ani odebírat body, takže na tyto operace nemusí být kladeny velké nároky. Pro tyto účely se nejčastěji využívají stromy, které umožňují rekurzivní dělení n-dimenzionálního prostoru na menší podprostory. Jedním z takovýchto algoritmů je octree, který rekurzivně dělí prostor na 8 podprostroů. Podobný algoritmus je kd-strom \cite{wiki:kdtree}, kde jednotlivé uzly jsou k-dimenzionální body. Tento typ stromu dělí prostor na podprostory podél těchto jednotlivých dimenzí. Pokud srovnáme tyto dva algoritmy, tak octree se rychleji staví a zároveň umí jednoduše přidávat nové body do již postaveného stromu. Oproti tomu do kd-stromu se body za běhu přidávají mnohem složitěji, ale algoritmus je efektivnější pro vyhledávání bodů a nejbližších sousedů. Protože jsem určil rychlé vyhledávání nejbližších sousedů jako nejdůležitější kritérium, vybral jsem nakonec pro reprezentaci mračna bodů kd-strom. Vyhledání nejbližšího souseda v kd-stromu (o $n$ prvcích a $k$ dimenzích) má v nejlepším případě asymptotickou složitost $O(log~n)$ a v nejhorším případě $O(k \times n^{1-\frac{1}{k}})$, ve většině případů má však složitost blíže k nejlepšímu případu. Podrobný popis kd-stromu je k dispozici v \cite{wiki:kdtree}. Samozřejmě implementace kd-stromu je poměrně složitá, obzvláště, pokud má být co nejefektivnější. Proto jsem se rozhodl pro použití knihovny. Po vyzkoušení několika různých knihoven byla jednoznačně nejrychlejší implementace \cite{kdtree}, kterou jsem použil.
 
 Pro akumulátorové pole potřebujeme nějaké dvourozměrné pole, které nám bude udržovat body  s danými parametry na jednotlivých pozicích v poli. Bylo by možné použít obyčejné \verb|int[][]| pole, které by pouze ukládalo počet bodů na jednotlivých políčkách. Takové řešení by na první pohled mohlo pro vyhledávání vrcholů při klastrování dostatečné, nicméně by bylo výpočetně náročné zpětně zjistit, které body na dané pozici jsou. Proto bude jednodušší, když budou body uložené přímo v akumulátorovém poli. Proto jsem zvolil 2D pole seznamů \verb|ArrayList<Point3D>[][]|, které bude udržovat body na jednotlivých políčkách pole. Takto budu při vyhledávání vrcholů v poli jednoduše vědět, kolik bodů se na daném políčku nachází, ale zároveň půjde tyto body ihned zpracovávat bez dalšího vyhledávání. 
 
-Velmi důležité jsou také rozměry akumulátorového pole. Podle teorie je buňky v akumulátorovém poli určena na základě velikosti šumu ve vstupním mračnu. Bohužel testovací data, která mám k dispozici, nemají šum definovaný. Proto je nutné vymyslet vlastní strategii pro určení velikosti akumulátorového pole. Pokud je akumulátorové pole příliš malé, jednotlivé vrcholy mohou splynout, nepůjde je v poli detekovat a algoritmus prakticky nebude funkční. Pokud naopak bude akumulátorové pole příliš velké, vrcholy v poli nebudou výrazné a výsledek bude stejný jako v předchozím případě - algoritmus nebude fungovat tak, jak by se od něj čekalo. Původně jsem vycházel z úvahy, že velikost políčka v akumulátorovém poli bude např. jedna tisícina z velikosti mračna bodů. V takovém případě je ale velikost pole pro všechny vstupní data stejná (např. $1000~\times~1000$). To ale není vhodné řešení, protože vstupní data mohou obsahovat řádově tisíce až miliony bodů a nezdá se logické, aby pro oba případy bylo akumulátorové pole stejně velké (a v praxi se to také ukázalo jako nefunkční řešení). Z toho jsem tedy usoudil, že velikost akumulátorového pole bude výrazně závislá na počtu vstupních bodů. Proto se zdá rozumné odvodit velikost pole právě od této hodnoty. Nejprve jsem zkusil určit velikost jako tisícinu z počtu bodů. To se také neukázalo jako vhodné řešení, protože pro malá mračna bylo pole příliš malé a pro velká mračna naopak příliš velké (pro 1,5 milionu bodů by bylo potřeba alokovat pole o rozměrech $15000~\times~15000$, což by bylo paměťově extrémně náročné). Lineární závislost mezi počtem bodů a velikostí akumulátorového pole tedy není správné řešení. Došel jsem tedy k úvaze, že by mohla být vhodná volba stejný počet políček v akumulátorovém poli, jako je počet bodů. To nám zajistí, že pole nikdy nebude příliš malé, protože se předpokládá, že body na stejné ploše budou jen v několika sousedních políčkách. Proto by mělo v poli zbýt dostatek volných políček, aby jednotlivé vrcholy nesplynuly dohromady. Po vyzkoušení na reálných datech jsem zjistil, že velikost pole není ani příliš velká a vrcholy jsou dostatečně rozeznatelné. Jako rozměr akumulátorového pole jsem tedy určil odmocninu z počtu bodů (to odpovídá stavu, že počet políček v poli se rovná počtu bodů). V takovém případě je pro mračno s 10 tisíci body alokováno pole velikosti $100~\times~100$, pro 1,5 mil bodů je to pole o rozměrech $1225~\times~1225$. Samozřejmě ani toto není optimální řešení. Velikost pole by měla být nejlépe odvozena od konkrétního zpracovávaného mračna a jeho vlastností jako očekávaný počet rovin, hustota bodů, počet bodů mimo roviny apod. Nicméně takový algoritmus by nebyl vůbec jednoduchý a pravděpodobně by vyžadoval nějaké vstupní parametry zadané uživatelem. To je ale nevhodné, za prvé se očekává, že algoritmus bude co nejvíce automatický, za druhé by běžný uživatel bez hlubších znalostí nebyl schopen takové parametry zadat. Proto jsem nakonec zvolil výše popsané řešení.
+Velmi důležité jsou také rozměry akumulátorového pole. Podle teorie je políčko v akumulátorovém poli určeno na základě velikosti šumu ve vstupním mračnu. Bohužel testovací data, která mám k dispozici, nemají šum definovaný. Proto je nutné vymyslet vlastní strategii pro určení velikosti akumulátorového pole. Pokud je akumulátorové pole příliš malé, jednotlivé vrcholy mohou splynout, nepůjde je v poli detekovat a algoritmus prakticky nebude funkční. Pokud naopak bude akumulátorové pole příliš velké, vrcholy v poli nebudou výrazné a výsledek bude stejný jako v předchozím případě - algoritmus nebude fungovat tak, jak by se od něj čekalo. Původně jsem vycházel z úvahy, že velikost políčka v akumulátorovém poli bude např. jedna tisícina z velikosti mračna bodů. V takovém případě je ale velikost pole pro všechny vstupní data stejná (např. $1000~\times~1000$). To ale není vhodné řešení, protože vstupní data mohou obsahovat řádově tisíce až miliony bodů a nezdá se logické, aby pro oba případy bylo akumulátorové pole stejně velké (a v praxi se to také ukázalo jako nefunkční řešení). Z toho jsem tedy usoudil, že velikost akumulátorového pole bude výrazně závislá na počtu vstupních bodů. Proto se zdá rozumné odvodit velikost pole právě od této hodnoty. Nejprve jsem zkusil určit velikost pole jako tisícinu z počtu bodů. To se také neukázalo jako vhodné řešení, protože pro malá mračna bylo pole příliš malé a pro velká mračna naopak příliš velké (pro 1,5 milionu bodů by bylo potřeba alokovat pole o rozměrech $15000~\times~15000$, což by bylo paměťově extrémně náročné). Lineární závislost mezi počtem bodů a velikostí akumulátorového pole tedy není správné řešení. Došel jsem tedy k úvaze, že by mohla být vhodná volba stejný počet políček v akumulátorovém poli, jako je počet bodů. To nám zajistí, že pole nikdy nebude příliš malé, protože se předpokládá, že body ležící ve stejné rovině budou jen v několika sousedních políčkách. Proto by mělo v poli zbýt dostatek volných políček, aby jednotlivé vrcholy nesplynuly dohromady. Po vyzkoušení na reálných datech jsem zjistil, že velikost pole není ani příliš velká a vrcholy jsou dostatečně rozeznatelné. Jako rozměr akumulátorového pole jsem tedy určil odmocninu z počtu bodů (to odpovídá stavu, že počet políček v poli se rovná počtu bodů). V takovém případě je pro mračno s 10 tisíci body alokováno pole velikosti $100~\times~100$, pro 1,5 mil bodů je to pole o rozměrech $1225~\times~1225$. Samozřejmě ani toto není optimální řešení. Velikost pole by měla být nejlépe odvozena od konkrétního zpracovávaného mračna a jeho vlastností jako očekávaný počet rovin, hustota bodů, počet bodů mimo roviny apod. Nicméně takový algoritmus by nebyl vůbec jednoduchý a pravděpodobně by vyžadoval nějaké vstupní parametry zadané uživatelem. To je ale nevhodné, za prvé se očekává, že algoritmus bude co nejvíce automatický, za druhé by běžný uživatel bez hlubších znalostí nebyl schopen takové parametry zadat. Proto jsem nakonec zvolil uvedené řešení.
 
-Nyní máme připravené potřené datové struktury, můžeme tedy začít se samotným algoritmem. Nejprve si tedy vytvoříme novou instanci kd-stromu, konkrétně instanci třídy \verb|SqrEuclid|, což je kd-strom, který využvívá klasickou euklidovskou vzdálenost mezi body. Poté kd-strom  v cyklu naplníme body a zároveň získáme jednoduchým porovnáním  největší a nejmenší hodnoty součřadnic v celém mračnu bodů. Tyto souřadnice využijeme k výpočtu pozic referenčních bodů podle vztahu \ref{eq:origins}.
+Nyní máme připravené potřené datové struktury, můžeme tedy začít se samotným algoritmem. Nejprve si tedy vytvoříme novou instanci kd-stromu, konkrétně instanci třídy \verb|SqrEuclid|, což je kd-strom, který využívá klasickou euklidovskou vzdálenost mezi body. Poté kd-strom  v cyklu naplníme body a zároveň získáme jednoduchým porovnáním  největší a nejmenší hodnoty souřadnic v celém mračnu bodů. Tyto souřadnice využijeme k výpočtu pozic referenčních bodů podle vztahu \ref{eq:origins}.
 
-Ještě před samotným výpočtem parametrů bodů musíme stanovit velikost koule, která definuje okolí (viz sekce \ref{sub:def-okoli}). V popisovaném algoritmu je tato velikost popisována euklidovskou vzdáleností (např. 3m). Já ale v testovacích datech žádné měřítko nemám, navíc mně dostupná data jsou poměrně odlišná od dat, které používali v článku. Proto je tato definice nevhodná a je potřeba ji nějak obejít. Protože mohou mít různá data výrazně jinou hustotu bodů, přijde mi rozumné velikost koule vypočítat z daného konstatního počtu bodů. Bohužel určit tento počet naprosto obecně pro libovolný typ dat je téměř nemožné. Proto jsem se rozhodl nechat tuto hodnotu jako volný parametr, který bude zadán uživatelem. To má i další důvod, tato hodnota velmi zásadně ovlivňuje dobu běhu algoritmu. Vyhledávání okolí v kd-stromu je drahá operace a pokud se pro každý bod vyhledává okolí v řádu stovek bodů, algoritmus může běžet desítky minut, což jistě není vždy optimální. Zároveň ale do určité míry platí, že čím větší okolí bodu se bere v úvahu, tím přesnější jsou vypočtené parametry bodu. Tím, že nechávám tento parametr na uživateli, mu dávám možnost vybrat si mezi rychlostí nebo kvalitou. Pokud tedy zadám malé hodnoty tohoto parametru, např. 10 - 50, tak je algoritmus poměrně rychlý, ale může dávat horší výsledky. Pokud zadám větší hodnoty, např. 80 - 200, tak může být doba běhu algoritmu výrazně pomalejší, zato s kvalitnějšími výsledky. Obecně bych doporučil volit hodnoty z intervalu 20 - 200 s tím, že vhodný kompromis mezi kvalitou a rychlostí je 40 - 80. Konkrétní dopad těchto hodnot na dobu běhu a kvalitu segmentace bude popsán v kapitole \ref{chap:test}. Je důležité zmínit, že tato hodnota se musí odvíjet zejména od vstupních dat, nikoliv pouze od toho, zda chceme kvalitu nebo výkon. Pokud máme data hodně přesná (tedy body v rovině mají od této roviny jenom minimální odchylku), můžeme volit menší hodnoty pro velikost okolí a výsledek bude stále kvalitní. Pokud máme ale např. data reprezentující budovu s taškovou střechou (obecně s nerovným povrchem), kterou chceme rozpoznat jako sement, musíme volit okolí větší. Na obrázku \ref{fig:strecha} je ukázka takové situace, kdy volba příliš malého okolí značně ovlivní výsledný výpočet.
+Ještě před samotným výpočtem parametrů bodů musíme stanovit velikost koule, která definuje okolí (viz sekce \ref{sub:def-okoli}). V popisovaném algoritmu je tato velikost popisována euklidovskou vzdáleností (např. 3m). Já ale v testovacích datech žádné měřítko nemám, navíc mně dostupná data jsou poměrně odlišná od dat, které používali pro testování v článku. Proto je tato definice nevhodná a je potřeba ji nějak obejít. Protože mohou mít různá data výrazně jinou hustotu bodů, přijde mi rozumné velikost koule vypočítat z daného konstatního počtu bodů. Bohužel určit tento počet naprosto obecně pro libovolný typ dat je téměř nemožné. Proto jsem se rozhodl nechat tuto hodnotu jako volný parametr, který bude zadán uživatelem. To má i další důvod, tato hodnota velmi zásadně ovlivňuje dobu běhu algoritmu. Vyhledávání okolí v kd-stromu je drahá operace a pokud se pro každý bod vyhledává okolí v řádu stovek bodů, algoritmus může běžet desítky minut, což jistě není vždy optimální. Zároveň ale do určité míry platí, že čím větší okolí bodu se bere v úvahu, tím přesnější jsou vypočtené parametry bodu. Tím, že necháváme tento parametr na uživateli, mu dáváme možnost vybrat si mezi rychlostí nebo kvalitou. Pokud tedy uživatel zadá malé hodnoty tohoto parametru, např. 10 - 50, tak je algoritmus poměrně rychlý, ale může vracet horší výsledky. Pokud zadá větší hodnoty, např. 80 - 200, tak může být doba běhu algoritmu výrazně pomalejší, zato s kvalitnějšími výsledky. Obecně bych doporučil volit hodnoty z intervalu 20 - 200 s tím, že vhodný kompromis mezi kvalitou a rychlostí je obvykle 40 - 80. Konkrétní dopad těchto hodnot na dobu běhu a kvalitu segmentace bude popsán v kapitole \ref{chap:test}. Je důležité zmínit, že tato hodnota se musí odvíjet zejména od vstupních dat, nikoliv pouze od toho, zda chceme kvalitu nebo výkon. Pokud máme data hodně přesná (tedy body v rovině mají od této roviny jenom minimální odchylku), můžeme volit menší hodnoty pro velikost okolí a výsledek bude stále kvalitní. Pokud máme ale např. data reprezentující budovu s nerovným povrchem (např. s taškovou střechou), který chceme rozpoznat jako segment, musíme volit okolí větší. Na obrázku \ref{fig:strecha} je ukázka takové situace, kdy volba příliš malého okolí značně ovlivní výsledný výpočet.
 
 \begin{figure}[ht]
 \begin{center}
@@ -498,11 +505,11 @@ Ještě před samotným výpočtem parametrů bodů musíme stanovit velikost ko
 \end{center}
 \end{figure}
 
-Hodnota, kterou uživatel zadá se ještě přímo nevyužije k definici okolí. Tato hodnota se využije pouze k vypočtení velikosti výsledné koule. Výpočet probíhá tak, že se náhodně vybere z mračna určitý počet bodů (např. setina ze všech bodů). Pro každý náhodně vybraný bod se vybere takový počet nejbližších sousedů, jaká je hodnota zadaného parametru. Poté se spočítá poloměr koule, které vybrané body tvoří (tedy vzdálenost střed - nejvzdálenější bod). Nakonec se spočítá aritmetický průměr všech vypočtených poloměrů. Tento aritmetický průměr je konečná velikost koule, která bude v algoritmu definovat okolí bodu. Pro všechny body bude mít tedy okolí stejnou velikost, ale bude pokaždé obsahovat různý počet bodů.
+Hodnota, kterou uživatel zadá, se ještě přímo nevyužije k definici okolí. Tato hodnota se využije pouze k vypočtení velikosti výsledné koule. Výpočet probíhá tak, že se náhodně vybere z mračna určitý počet bodů (např. setina ze všech bodů). Pro každý náhodně vybraný bod se vybere takový počet nejbližších sousedů, jaká je hodnota zadaného parametru. Poté se spočítá poloměr koule, které vybrané body tvoří (tedy vzdálenost střed - nejvzdálenější bod). Nakonec se spočítá aritmetický průměr všech vypočtených poloměrů. Tento aritmetický průměr je konečná velikost koule, která bude v algoritmu definovat okolí bodu. Pro všechny body bude mít tedy okolí stejnou velikost, ale bude pokaždé obsahovat různý počet bodů.
 
 V tuto chvíli již máme všechny potřebné informace pro výpočet parametrů všech bodů. Máme načtené body v kd-stromu, máme definované oba referenční body, dále máme vypočtenou velikost koule pro okolí bodu a máme připravené akumulátorové pole, do kterého budeme body ukládat. Vytvoříme tedy cyklus, pomocí kterého budeme procházet všechny body v mračnu.
 
-Nyní potřebujeme pro každý bod získat jeho okolí, tedy všechny body, které leží v kouli se středem v daném bodu a poloměrem, který jsme vypočítali. Víme, kolik by mělo být v této kouli průměrně bodů. Pro první iterovaný bod tedy vezmeme tento počet nejbližích sousedů. Vyhledávání n nejbližších sousedů je v kd-stromu definovaná operace, takže je to velmi jednoduché. Dále si spočítáme vzdálenost definovaného bodu a nejvzdálenějšího bodu z vybraných sousedů (kd-strom vrací body seřazené podle vzdálenosti od původního bodu, takže nejvzdálenější bod je ten poslední v seznamu). Pokud je tato vzdálenost větší, než je velikost koule definující okolí, tak pomocí binárního prohledávání projdeme seznam sousedů a nalezneme nejvzdálenější bod, který ještě leží uvnitř koule. Všechny body, které jsou dál, zahodíme. Pokud nastane situace, kdy ještě nemáme dostatek bodů, vynásobíme aktuální počet vybraných sousedů $1,5 \times$ a tento nový počet opět vybereme z kd-stromu a testujeme. Takto pokračujeme do té doby, než máme dostatek bodů. Je potřeba zmínit, že tento iterativní proces by měl nastat co nejméně, protože vyhledávání nejbližších sousedů v kd-stromu je pomalá operace. Celý výše popsaný proces získávání bodů pro okolí je přehledně znázorněn na diagramu \ref{fig:diag-okoli}.
+Nyní potřebujeme pro každý bod získat jeho okolí, tedy všechny body, které leží v kouli se středem v daném bodu a poloměrem, který jsme vypočítali. Víme, kolik by mělo být v této kouli průměrně bodů. Pro první iterovaný bod tedy vezmeme tento počet nejbližších sousedů. Vyhledávání $n$ nejbližších sousedů je v kd-stromu definovaná operace, takže je to velmi jednoduché. Dále si spočítáme vzdálenost zkoumaného bodu a nejvzdálenějšího bodu z vybraných sousedů (kd-strom vrací body seřazené podle vzdálenosti od původního bodu, takže nejvzdálenější bod je ten poslední v seznamu). Pokud je tato vzdálenost větší, než je velikost koule definující okolí, tak pomocí binárního prohledávání projdeme seznam sousedů a nalezneme nejvzdálenější bod, který ještě leží uvnitř koule. Všechny body, které jsou dál, zahodíme. Pokud nastane situace, kdy ještě nemáme dostatek bodů, vynásobíme aktuální počet vybraných sousedů $1,5 \times$ a tento nový počet opět vybereme z kd-stromu a testujeme. Takto pokračujeme do té doby, než máme dostatek bodů. Je potřeba zmínit, že tento iterativní proces by měl nastat co nejméně, protože vyhledávání nejbližších sousedů v kd-stromu je pomalá operace. Celý výše popsaný proces získávání bodů pro okolí je přehledně znázorněn na diagramu \ref{fig:diag-okoli}.
 
 \begin{figure}[ht]
 \begin{center}
@@ -512,7 +519,7 @@ Nyní potřebujeme pro každý bod získat jeho okolí, tedy všechny body, kter
 \end{center}
 \end{figure}
 
-Protože blízké body v mračnu bodů budou mít pravděpodobně velmi podobné okolí, využijeme výslednou velikost okolí jako výchozí hodnotu pro bod v další iteraci. Tady nastává otázka, jestli použít přesně tu samou hodnotu nebo jí o trochu zvýšit. Vyhledávání bodů v kd-stromu je pomalá oprace a nechceme, aby bylo v další iteraci zbytečně provedeno dvakrát, protože chybělo několik málo bodů. Zároveň je ale nutné vzít v úvahu, že čím více bodů v kd-stromu vyhledáváme, tím pomalejší toto vyhledávání je. Je tedy otázka, jaký je optimální poměr navýšení počtu bodů do další iterace. Proto jsem se rozhodl určit tento parametr experimentálně. Porovnal jsem 3 různá vstupní mračna o různých velikostech a volil jsem velikost okolí 50 a 200 bodů. V tabulce \ref{table:okoli-param} je zaznamenán celkový čas, který vybírání sousedních bodů zabralo a také je zde uvedeno procento bodů, pro které bylo nutné vyhledávat v kd-stromu vícekrát\footnote{Tato informace je pouze pro zajímavost, relevantní pro porovnání je pouze celkový čas.}. V naprosté většině případů byly výsledky nejlepší při hodnotě paramteru 1,10. Pro další bod při iterování bude tedy použit 1,1$\times$ násobek aktuální velikosti okolí.
+Protože blízké body v mračnu bodů budou mít pravděpodobně velmi podobné okolí, využijeme výslednou velikost okolí jako výchozí hodnotu pro bod v další iteraci. Tady nastává otázka, jestli použít přesně tu samou hodnotu nebo jí o trochu zvýšit. Vyhledávání bodů v kd-stromu je pomalá operace a nechceme, aby bylo v další iteraci zbytečně provedeno dvakrát, protože chybělo několik málo bodů. Zároveň je ale nutné vzít v úvahu, že čím více bodů v kd-stromu vyhledáváme, tím pomalejší toto vyhledávání je. Je tedy otázka, jaký je optimální poměr navýšení počtu bodů do další iterace. Proto jsem se rozhodl určit tento parametr experimentálně. Porovnal jsem 3 různá vstupní mračna o rozdílných velikostech a volil jsem velikost okolí 50 a 200 bodů. V tabulce \ref{table:okoli-param} je zaznamenán celkový čas, který vybírání sousedních bodů zabralo a také je zde uvedeno procento bodů, pro které bylo nutné vyhledávat v kd-stromu vícekrát\footnote{Tato informace je pouze pro zajímavost, relevantní pro porovnání je pouze celkový čas.}. V naprosté většině případů byly výsledky nejlepší při hodnotě paramteru 1,10. Pro další bod při iterování bude tedy použit 1,1$\times$ násobek aktuální velikosti okolí.
 
 
 \begin{table}[ht]
@@ -522,23 +529,23 @@ Protože blízké body v mračnu bodů budou mít pravděpodobně velmi podobné
 \textit{} & \multicolumn{ 4}{c|}{\textit{Data 1: 291232 bodů}} & \multicolumn{ 4}{c|}{\textit{Data2: 81294 bodů}} & \multicolumn{ 4}{c|}{\textit{Data3: 1299900 bodů}} \\ \hline
 \textit{Okolí} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} & \multicolumn{ 2}{c|}{\textit{50 bodů}} & \multicolumn{ 2}{c|}{\textit{200 bodů}} \\ \hline
 \textit{Param.} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} & \textit{Opak.} & \textit{Čas} \\ \hline
-1,00 & 50,83\% & 21673 & 51,45\% & 79667 & 49,59\% & 6153 & 49,83\% & 22536 & 50,51\% & 135517 & 50,52\% & 659173 \\ \hline
-1,05 & 27,43\% & 17040 & 16,84\% & 56952 & 33,06\% & 5349 & 24,92\% & 18014 & 27,69\% & 114876 & 15,84\% & 452836 \\ \hline
-\textbf{1,10} & \textbf{17,89\%} & \textbf{15190} & \textbf{10,11\%} & \textbf{53280} & \textbf{24,67\%} & \textbf{4514} & \textbf{16,70\%} & \textbf{17382} & \textbf{17,36\%} & \textbf{110571} & \textbf{9,31\%} & \textbf{457391} \\ \hline
-1,15 & 12,88\% & 16176 & 7,31\% & 57246 & 18,64\% & 5137 & 12,36\% & 19689 & 12,60\% & 111298 & 6,72\% & 488154 \\ \hline
-1,25 & 8,04\% & 16493 & 4,93\% & 60144 & 13,89\% & 4548 & 8,70\% & 20537 & 7,98\% & 120900 & 4,38\% & 522850 \\ \hline
-1,50 & 4,26\% & 17986 & 2,91\% & 70069 & 7,72\% & 5071 & 5,34\% & 21172 & 3,79\% & 133849 & 2,48\% & 604658 \\ \hline
-2,00 & 2,17\% & 23895 & 1,62\% & 99684 & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} \\ \hline
-2,50 & 1,51\% & 26335 & 1,15\% & 121762 & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} \\ \hline
+1,00 & 50,83\% & 21,67 & 51,45\% & 79,67 & 49,59\% & 6,15 & 49,83\% & 22,54 & 50,51\% & 135,52 & 50,52\% & 659,17 \\ \hline
+1,05 & 27,43\% & 17,04 & 16,84\% & 56,95 & 33,06\% & 5,35 & 24,92\% & 18,01 & 27,69\% & 114,88 & 15,84\% & 452,84 \\ \hline
+\textbf{1,10} & \textbf{17,89\%} & \textbf{15,19} & \textbf{10,11\%} & \textbf{53,28} & \textbf{24,67\%} & \textbf{4,51} & \textbf{16,70\%} & \textbf{17,38} & \textbf{17,36\%} & \textbf{110,57} & \textbf{9,31\%} & \textbf{457,39} \\ \hline
+1,15 & 12,88\% & 16,18 & 7,31\% & 57,25 & 18,64\% & 5,14 & 12,36\% & 19,69 & 12,60\% & 111,30 & 6,72\% & 488,15 \\ \hline
+1,25 & 8,04\% & 16,49 & 4,93\% & 60,14 & 13,89\% & 4,55 & 8,70\% & 20,54 & 7,98\% & 120,90 & 4,38\% & 522,85 \\ \hline
+1,50 & 4,26\% & 17,99 & 2,91\% & 70,07 & 7,72\% & 5,07 & 5,34\% & 21,17 & 3,79\% & 133,85 & 2,48\% & 604,66 \\ \hline
+2,00 & 2,17\% & 23,90 & 1,62\% & 99,68 & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} \\ \hline
+2,50 & 1,51\% & 26,34 & 1,15\% & 121,76 & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} & \multicolumn{1}{l|}{} \\ \hline
 \end{tabular}
 }
-\caption{Tabulka znázorňující rozílné časy vybírání okolí z kd-stromu v závislosti na definovaném parametru. Čas je uváděn v ms, sloupec \uv{Opak.} určuje, pro jaké procento bodů bylo nutné z kd-stromu vybírat okolí více než jednou.} 
+\caption{Tabulka znázorňující rozdílné časy vybírání okolí z kd-stromu v závislosti na definovaném parametru. Čas je uváděn v sekundách, sloupec \uv{Opak.} určuje, pro jaké procento bodů bylo nutné z kd-stromu vybírat okolí více než jednou. Prázdná políčka jsem již nevyplňoval, protože předešlé výsledky byly dostatečně průkazné a další měření by bylo zbytečné.} 
 \label{table:okoli-param}
 \end{table}
 
-V tuto chvíli máme pro bod vybrány všechny sousední body, které leží uvnitř dané koule. Abychom získali konečné okolí bodu, musíme proložit body rovinou a poté provést převažování této roviny, jak bylo posáno v sekci \ref{sub:def-okoli}. Dalším krokem v algoritmu je tedy pomocí metody nejmenších čtverců proložit rovinu body uvnitř koule.
+V tuto chvíli máme pro bod vybrány všechny sousední body, které leží uvnitř dané koule. Abychom získali konečné okolí bodu, musíme proložit body rovinou a poté provést převažování této roviny pomocí procesu popsaného v sekci \ref{sub:def-okoli}. Dalším krokem v algoritmu je tedy pomocí metody nejmenších čtverců proložit rovinu body uvnitř koule.
 
-Teorie k proložení roviny množinou bodů pomocí metody nejmenších čtverců je popsána v sekci \ref{sub:lsq}. Implementace této metody přímo vychází z teorie. Prvním krokem je výpočet centroidu, což je bod ležící na výsledné rovině. Tento bod se spočte jednoduše jako aritmetický průměr souřadnic všech vstupních bodů. Poté se vytvoří matice, které má 3 sloupce a stejný počet řádkú, jako je vstupních bodů. Na $i$-tém řádku je po souřadnicích zapsán rozdíl hodnot $bod_i - centroid$. Nad touto maticí je poté nutné provést SVD dekompozici. Poté stačí pouze vybrat z matice $V^T$ poslední sloupec a dopočítat koeficient $d$, viz vztah \ref{eq:d}. Tím jsme záskal všechny 4 potřebné parametry a můžeme vrátit novou instanci roviny.
+Teorie k proložení roviny množinou bodů pomocí metody nejmenších čtverců je popsána v sekci \ref{sub:lsq}. Implementace této metody přímo vychází z teorie. Prvním krokem je výpočet centroidu, což je bod ležící na výsledné rovině. Tento bod se spočte jednoduše jako aritmetický průměr souřadnic všech vstupních bodů. Poté se vytvoří matice, které má 3 sloupce a stejný počet řádků, jako je vstupních bodů. Na $i$-tém řádku je po souřadnicích zapsán rozdíl hodnot $bod_i - centroid$. Nad touto maticí je poté nutné provést SVD dekompozici. Poté stačí pouze vybrat z matice $V^T$ poslední sloupec a dopočítat koeficient $d$, viz vztah \ref{eq:d}. Tím záskáme všechny 4 potřebné parametry a můžeme vrátit novou instanci roviny.
 
 Ještě je nutné uvést, jak se provede SVD dekompozice. To je poměrně složitý a výpočetně náročný algoritmus, takže má smysl využít nějakou kvalitní matematickou knihovnu. Těch je ale velký počet a mohou se výrazně lišit ve výkonu. Na webových stránkách \cite{svdbench} je dostupné srovnání výkonu několika nejběžnějších knihoven pro matematické výpočty. Na obrázku \ref{fig:svd-bench} je graf, který znázorňuje výkon jednotlivých knihoven při výpočtu SVD.
 
@@ -557,12 +564,12 @@ Nejlépe z testu vychází knihovna EJML \cite{svdlib}. Nicméně je nutné pozn
 \begin{tabular}{|r|r|r|r|r|r|r|r|}
 \hline
 \textbf{Měření} & \textbf{EJML*} & \textbf{EJML} & \textbf{Jama*} & \textbf{UJMP} & \textbf{CommMath} & \textbf{Colt} & \textbf{jBlas} \\ \hline
-\textbf{1} & 88958 & 136998 & 152786 & 157150 & 185178 & 206535 & $>$300000 \\ \hline
-\textbf{2} & 88860 & 135831 & 151418 & 156057 & 182576 & 201198 & - \\ \hline
-\textbf{Ø} & 88909 & 136415 & 152102 & 156604 & 183877 & 203867 & $>$300000 \\ \hline
+\textbf{1} & 88,958 & 136,998 & 152,786 & 157,150 & 185,178 & 206,535 & $>$300,000 \\ \hline
+\textbf{2} & 88,860 & 135,831 & 151,418 & 156,057 & 182,576 & 201,198 & - \\ \hline
+\textbf{Ø} & 88,909 & 136,415 & 152,102 & 156,604 & 183,877 & 203,867 & $>$300,000 \\ \hline
 \end{tabular}
 }
-\caption{Tabulka znázorňující časy výpočtu SVD různých knihoven. Časy jsou uvedeny v ms. Knihovny označené * jsou nastavené tak, aby při SVD počítaly pouze matici $V^T$.} 
+\caption{Tabulka znázorňující časy výpočtu SVD různých knihoven. Časy jsou uvedeny v sekundách. Knihovny označené * jsou nastavené tak, aby při SVD počítaly pouze matici $V^T$.} 
 \label{table:svdlib}
 \end{table}
 
@@ -570,11 +577,11 @@ Jak je z tabulky patrné, nejrychlejší je knihovna EJML, stejně jako ve výš
 
 Dříve v této kapitole jsem odůvodňoval, proč je průměrná velikost okolí zadávána uživatelem. Jedním z argumentů bylo, že uživatel si částečně může zvolit, jestli chce segmentaci provést rychle nebo spíše pomaleji a kvalitněji. Je potřeba zmínit, že rychlost algoritmu není daná pouze vybíráním okolí z kd-stromu. Další velkou složkou z celkového času je právě výpočet SVD při prokládání roviny. Ve skutečnosti prokládání bodů rovinou zabere větší část z celkového času běhu algoritmu, než vybírání bodů z kd-stromu. Nicméně obě tyto hodnoty jsou řádově stejné a dohromady tvoří naprostou většinu z celkové doby běhu. Stejně jako u kd-stromu je i prokládání bodů rovinou je výrazně závislé na počtu vstupních bodů. Mělo by tedy být jasné, že velikost okolí naprosto zásadně ovlivňuje dobu běhu celého algoritmu, uživatel může tedy vhodnou volbou okolí výrazně přizpůsobit celkový čas algoritmu svým potřebám.
 
-Zpět k implementaci algoritmu: jsme ve fázi, kdy máme vybrané okolí bodu a tímto okolím jsme proložili rovinu. Je nutné zmínit, že při prokládání roviny může nastat výjimka, kdy bod nemá žádný bod ve svém okolí nebo má jenom jeden. V takovém případě není proložení roviny možné. Pro takovýto bod tedy nemůžeme vypočítat parametry a je nutné ho zahodit. Nicméně takových bodů by mělo být naprosté minimum a vzhledem k tomu, že bod nema okolí, tak velmi pravděpodobně neleží na žádné rovině a jde spíš o nějakou chybu ve vstupních datech. 
+Zpět k implementaci algoritmu: jsme ve fázi, kdy máme vybrané okolí bodu a tímto okolím jsme proložili rovinu. Je nutné zmínit, že při prokládání roviny může nastat výjimka, kdy bod nemá žádný bod ve svém okolí nebo má jenom jeden. V takovém případě není proložení roviny z principu možné. Pro takovýto bod tedy nemůžeme vypočítat parametry a je nutné ho zahodit. Nicméně takových bodů by mělo být naprosté minimum a vzhledem k tomu, že bod nemá okolí, tak velmi pravděpodobně neleží na žádné rovině a jde spíš o nějakou chybu ve vstupních datech. 
 
-Pokud se rovinu podaří proložit, pokračujeme úpravou této roviny pomocí převažování. Nejprve pro každý bod spočítáme váhu, což je inverze ke vzdálenosti bodu od roviny. Po vypočítání všech vah proložíme znovu rovinu všemi body, nicméně tentokrát využijeme váhy a váženou metody nejmenších čtverců. Implementace vážené varianty metody nejmenších čtverců je téměř stejná jako běžné varianty, jenom se uvažují váhy při výpočtu centroidu a při konstrukce matice, nad kterou se poté provádí SVD. Po proložení roviny se rozhoduje, zda se opět vypočítají váhy a rovina se znovu proloží nebo zda se cyklus ukončí. Ukončení cyklu nastává ve dvou případech, pokud jsme již v desáté iteraci nebo pokud se parametry nové roviny výrazně neliší od poslední iterace. To zjistíme tak, že si udržujeme normálový vektor z předchozí iterace a zjistíme jeho odchylku od normálového vektoru roviny ze současné itrace. Pokud je odchylka menší než např. 2$\deg$, tak cyklus ukončíme.
+Pokud se rovinu podaří proložit, pokračujeme úpravou této roviny pomocí převažování. Nejprve pro každý bod spočítáme váhu, což je inverze ke vzdálenosti bodu od roviny. Po vypočítání všech vah proložíme znovu rovinu všemi body, nicméně tentokrát využijeme váhy a váženou metodu nejmenších čtverců. Implementace vážené varianty metody nejmenších čtverců je téměř stejná jako běžné varianty, jenom se uvažují váhy při výpočtu centroidu a při konstrukci matice, nad kterou se poté provádí SVD. Po proložení roviny se rozhoduje, zda se opět vypočítají váhy a rovina se znovu proloží nebo zda se cyklus ukončí. Ukončení cyklu nastává ve dvou případech, pokud jsme již v desáté iteraci nebo pokud se parametry nové roviny výrazně neliší od poslední iterace. To zjistíme tak, že si udržujeme normálový vektor roviny z předchozí iterace a zjistíme jeho odchylku od normálového vektoru roviny ze současné iterace. Pokud je odchylka menší než např. $2^\circ$, tak cyklus ukončíme.
 
-Ačkoliv tento proces převažování vypadá na první pohled jednoduše, je zde malý problém s výpočtem vah, které se v rámci iterací mění pomalu a provádí se zbytečně velký počet iterací. Jako řešení se nabízí použít inverzi k druhé mocnině vzdálenosti bodu od roviny. Toto řešení funguje poměrně dobře a výrazně snižuje potřebný počet iterací a tím i celkový čas běhu algoritmu. Nicméně i toto řešení má jeden problém, váhy bodů blízko rovině mohou narůstat do výrazně velkých čísel, což může ovlivnit výsledek. Problém nastává také v okamžiku, kdy bod leží přímo na dané ploše. V tu chvíli jeho váha odpovídá hodnotě $\frac{1}{0}$, což Java převede na hodnotu $Double.INFINITY$. Pokud se takováto váha dostane do výpočtu SVD, tak sice nevznikne žádná výjimka a výpočet proběhne, nicméně výsledek je výpočtu je vždy chybný. Tento problém jsme se snažil vyřešit tím, že jsem hodnotu nekonečna nahrazoval nějakou velkou konstantou (zkoušel jsem různé varianty od 10e5 do 10e50), nicméně v tomto případě se výpočet SVD choval velmi nepředvídatelně a vracel špatné výsledky. Takže jediné řešení, které se mi podařilo najít a funguje, je body s \uv{nekonečnou váhou} do výpočtu roviny vůbec nezahrnovat. Toto řešení také není příliš dobré, protože body, které by měly rovinu určovat nejlépe jsme museli z výpočtu vynechat. Naštěstí takovýchto bodů je při výpočtu zanedbatelné množství (v průměru je ovlivněna váha jednoho bodu u 1 - 2\% výpočtů rovin), takže na výslednou segmentaci nemá tento problém žádné rozpoznatelné důsledky.
+Ačkoliv tento proces převažování vypadá na první pohled jednoduše, je zde malý problém s výpočtem vah, které se v rámci iterací mění pomalu a provádí se zbytečně velký počet iterací. Jako řešení se nabízí použít inverzi k druhé mocnině vzdálenosti bodu od roviny. Toto řešení funguje poměrně dobře a výrazně snižuje potřebný počet iterací a tím i celkový čas běhu algoritmu. Nicméně i toto řešení má jeden problém, váhy bodů blízko rovině mohou narůstat do výrazně velkých čísel, což může ovlivnit výsledek. Problém nastává také v okamžiku, kdy bod leží přímo na dané rovině. V tu chvíli jeho váha odpovídá hodnotě $^1/_0$, což Java převede na hodnotu $Double.INFINITY$. Pokud se takováto váha dostane do výpočtu SVD, tak sice nevznikne žádná výjimka a výpočet proběhne, nicméně výsledek výpočtu je vždy chybný. Tento problém jsme se snažil vyřešit tím, že jsem hodnotu nekonečna nahrazoval nějakou velkou konstantou (zkoušel jsem různé varianty od 10e5 do 10e50), nicméně v tomto případě se výpočet SVD choval velmi nepředvídatelně a vracel špatné výsledky. Takže jediné řešení, které se mi podařilo najít a funguje, je body s \uv{nekonečnou váhou} do výpočtu roviny vůbec nezahrnovat. Toto řešení také není příliš dobré, protože body, které by měly rovinu určovat nejlépe jsou z výpočtu vynechány. Naštěstí takovýchto bodů je při výpočtu zanedbatelné množství (v průměru je ovlivněna váha jednoho bodu u 1 - 2\% výpočtů rovin), takže na výslednou segmentaci nemá tento problém žádné rozpoznatelné důsledky.
 
 Po ukončení procesu převažování již můžeme definovat výsledné okolí, ze kterého přímo vypočítáme parametry bodu. Toto okolí definujeme tak, že nad a pod výslednou proloženou rovinou definujeme buffer (viz Obr. \ref{fig:definice-okoli}) a body, které leží mimo tento buffer zahodíme. Definice bufferu popsaná v sekci \ref{sub:def-okoli} používá pro určení velikosti bufferu šum v datech. Jak jsem již zmiňoval na začátku této kapitoly, v mých testovacích datech žádný šum není, proto je potřeba tuto definici nějak obejít. Jako řešení se nabízí vypočítat RMS a porovnat jednotlivé vzdálenosti bodů od roviny s touto průměrnou hodnotou. Body, jejichž vzdálenost je menší jak 2$\times$RMS, zahrneme do výsledného okolí. Body, které leží dále, z okolí zahodíme. 
 
@@ -585,33 +592,33 @@ s = param \times \frac{velikost~akumulatroveho~pole}{velikost~celeho~mracna~bodu
 \end{equation}
 
 \noindent
-kde $s$ je souřadnice v akumulátorovém poli, $param$ je vypočtená vzdálenost roviny od referenčního bodu a velikost celého mračna bodů odpovídá vzdálenosti bodů s největšími a nejmenšími souřadnicemi v mračnu bodů\footnote{Toto jsme již vypočítali hned na začátku algoritmu při definování pozic referenčních bodů.}. Takto vypočteme obě souřadnice a poté už pouze na danou pozici vložíme daný bod. Jak bylo zmíněno na začátku kapitoly, akumulátorové pole je pole seznamů, takže bod vkládáme přímo do seznamu na dané pozici. Před vložením musíme ještě ověřit, jestli je dané pozici již vytvořená instance seznamu, případně ji musíme vytvořit.
+kde $s$ je souřadnice v akumulátorovém poli, $param$ je vypočtená vzdálenost roviny od referenčního bodu a velikost celého mračna bodů odpovídá vzdálenosti bodů s největšími a nejmenšími souřadnicemi v mračnu bodů\footnote{Toto jsme již vypočítali hned na začátku algoritmu při definování pozic referenčních bodů.}. Takto vypočteme obě souřadnice a poté už pouze na vypočtenou pozici vložíme daný bod. Jak bylo zmíněno na začátku kapitoly, akumulátorové pole je pole seznamů, takže bod vkládáme přímo do seznamu na dané pozici. Před vložením musíme ještě ověřit, jestli je dané pozici již vytvořená instance seznamu, případně ji musíme vytvořit.
 
 Tímto máme první část algoritmu kompletně hotovou. Ve chvíli, kdy vypočteme parametry pro všechny body a uložíme je do akumulátorového pole, tak toto pole vrátíme a segmentace pokračuje druhou částí - klastrováním bodů.
 
 
 \subsection{Klastrování bodů v akumulátorovém poli}
 
-Tato část algoritmu se zabývá tím, jak v akumulátorovém poli správně identifikovat jednotlivé segmenty a jak je poté z pole vybrat. Teorie je taková, že každý segment vytvoří v akumulátorovém poli vrchol (viz Obr. \ref{fig:acc-pole}), který detekujeme a poté všechny body z takového vrcholu zahrneme do jednoho segmentu. Ačkoliv se to může zdát poměrně jednoduché, v praxi lze narazit na několik problémů. Jedním z takových problémů může být např. to, že v praxi je každý vrchol jinak vysoký a obsahuje jiný počet bodů, takže musíme stanovit nějakou hranici, kdy vrchol ještě prohlásíme za segment a kdy už bude jenom nějakým náhodným výsledkem šumu. Dalším problémem je situaci, kdy jsou dva vrcholy velmi blízko u sebe a nejde rozlišit, kde je mezi nimi hranice. V takovém případě musíme využít nějakou další znalost o bodech z prostoru objektů. Může nastat další podobný problém, kdy jsou dva vrcholy blíko u sebe a na první pohled nedokážeme určit, že se jedná o dva vrcholy a ne jen jeden. Problematická se poté ukáže i samotná definice vrcholu. V praxi může být jeden takový vrchol tvořen několika menšími vrcholy v těsné blízkosti. Musíme být tedy schopni rozlišit, kdy takové vrcholy tvoří jeden segment a kdy už ne. Toto jsou ve stručnosti hlavní problémy, kterými se budu v této kapitole zabývat.
+Tato část algoritmu se zabývá tím, jak v akumulátorovém poli správně identifikovat jednotlivé segmenty a jak je poté z pole vybrat. Teorie je taková, že každý segment vytvoří v akumulátorovém poli vrchol (viz Obr. \ref{fig:acc-pole}), který detekujeme a poté všechny body z takového vrcholu zahrneme do jednoho segmentu. Ačkoliv se to může zdát poměrně jednoduché, v praxi lze narazit na několik problémů. Jedním z takových problémů může být např. to, že každý vrchol je jinak vysoký a obsahuje jiný počet bodů, takže je nutné stanovit nějakou hranici, kdy vrchol ještě označíme za segment a kdy už bude jenom nějakým náhodným výsledkem šumu. Dalším problémem je situaci, kdy jsou dva vrcholy velmi blízko u sebe a nejde rozlišit, kde je mezi nimi hranice. V takovém případě musíme využít nějakou další znalost o bodech z objektového prostoru. Může nastat další podobný problém, kdy jsou dva vrcholy blzíko u sebe a na první pohled nedokážeme určit, že se jedná o dva vrcholy a ne jen jeden. Problematická se poté ukáže i samotná definice vrcholu. V praxi může být jeden takový vrchol tvořen několika menšími vrcholy v těsné blízkosti. Musíme být tedy schopni rozlišit, kdy takové vrcholy tvoří jeden segment a kdy už ne. Toto jsou ve stručnosti hlavní problémy, kterými se budu v této kapitole zabývat.
 
-Prvním důležitým krokem je tedy správně definovat vrchol a vytvořit algoritmus, který takové vrcholy v poli vyhledá. Vrchol jsem definoval tak, že je to souvislá oblast v poli, ve které všechny políčka obsahují více bodů, než je nějaký předem stanovený práh (hodnota). S takovouto definicí beru v úvahu, že jeden vrchol se může skládat z více spojených vrcholů v blízkém okolí. Zároveň pomocí této definice můžu vrcholy vyhledávat iterativně, nejprve nastavím práh vyšší a vyberu vrcholy, které budou s velkou pravděpodobností reprezentovat segment a tento práh můžu postupně snižovat a vyhledávat nové vrcholy, dokud bude jejich kvalita přijatelná. Samozřejmě takový proces není optimální, protože se pole musí procházet vícekrát, nicméně v praxi není příliš reálné správně identifikovat všechny vrcholy najednou.
+Prvním důležitým krokem je tedy správně definovat vrchol a vytvořit algoritmus, který takové vrcholy v poli vyhledá. Vrchol jsem definoval tak, že je to souvislá oblast v poli, ve které všechny políčka obsahují více bodů, než je nějaký předem stanovený práh (hodnota). S takovouto definicí beru v úvahu, že se jeden vrchol může skládat z více spojených vrcholů v blízkém okolí. Zároveň pomocí této definice můžu vrcholy vyhledávat iterativně, nejprve nastavím práh vyšší a vyberu vrcholy, které budou s velkou pravděpodobností reprezentovat segment a tento práh můžu postupně snižovat a vyhledávat nové vrcholy, dokud bude jejich kvalita přijatelná.
 
-Nyní je tedy potřeba navrhnout algoritmus, který takové vrcholy v poli vyhledá. Na první pohled by se mohlo zdát, že by bylo vhodné využít nějaký algoritmus na bázi gradientního vzestupu či simulovaného žíhání, nicméně u takových algoritmů není zaručeno, že lokálně najdou vždy ten nejvyšší vrchol, můžou nejít pouze menší vrchol v blízkosti větší. Navíc takovéto algoritmy ani nezaručují nalezení všech vrcholů. Proto je vhodné o tomto problému uvažovat trochu jinak, než o pouhém hledání lokálních maxim. Protože jsem vrchol definoval jako spojitou oblast splňující danou podmínku (oblsat vyšší než daný práh), můžeme tento problém převést na vyhledávání spojitých oblastí v poli. K tomu se nabízí využít algoritmus flood fill, který se používá např. pro implementaci plechovky v grafických editorech (tedy \uv{vylévá} spojité oblasti stejnou barvou). Algoritmus implementujeme tak, že budeme procházet akumulátorové pole po jednotlivých políčkách. Pokud narazíme na políčko, kde je počet vyšší, než zadaný práh, pustíme flood fill na toto políčko a necháme ho vyhledat celou spojitou oblast, která je vyšší než práh. Z této oblasti poté vybereme jednoduše největší políčko a jeho souřadnice si uložíme do pomocného pole. Zároveň si vytvoříme bitové pole o stejné velikosti, jako je akumulátorové pole. Do tohoto pole si budeme poznamenávat, na kterých pozicích jsme již identifikovali vrchol. Tyto pozice poté již neprohledáváme. Tím zajistíme, že nebudeme použštět flood fill na jeden vrchol několikrát. Toto pole by nemělo přidat žádnou velkou paměťovou zátěž, protože pro označení políčka použijeme pouze jeden bit, takže pro toto pole potřeba alokovat pouze osminu paměti oproti původnímu akumulátorovému poli. Pomocí tohoto algoritmu projdeme celé pole a vyhledáme všechny vrcholy.
+Nyní je tedy potřeba navrhnout algoritmus, který takové vrcholy v poli vyhledá. Na první pohled by se mohlo zdát, že by bylo vhodné využít nějaký algoritmus na bázi gradientního vzestupu či simulovaného žíhání, nicméně u takových algoritmů není zaručeno, že lokálně najdou vždy ten nejvyšší vrchol. Navíc takovéto algoritmy ani nezaručují nalezení všech vrcholů. Proto je vhodné o tomto problému uvažovat trochu jinak, než o pouhém hledání lokálních maxim. Protože jsem vrchol definoval jako spojitou oblast splňující danou podmínku (oblast vyšší než daný práh), můžeme tento problém převést na vyhledávání spojitých oblastí. K tomu se nabízí využít algoritmus flood fill, který se používá např. pro implementaci plechovky v grafických editorech (tedy \uv{vylévá} spojité oblasti stejnou barvou). Algoritmus implementujeme tak, že budeme procházet akumulátorové pole po jednotlivých políčkách. Pokud narazíme na políčko, kde je počet bodů vyšší, než zadaný práh, pustíme flood fill na toto políčko a necháme ho vyhledat celou spojitou oblast, která je vyšší než práh. Z této oblasti poté vybereme jednoduše největší políčko a jeho souřadnice si uložíme do pomocného pole. Zároveň si vytvoříme bitové pole o stejné velikosti, jako je akumulátorové pole. Do tohoto pole si budeme poznamenávat, na kterých pozicích jsme identifikovali vrchol. Tyto pozice poté již neprohledáváme. Tím zajistíme, že nebudeme pouštět flood fill na jeden vrchol několikrát. Toto pole by nemělo přidat žádnou velkou paměťovou zátěž, protože pro označení políčka použijeme pouze jeden bit, takže pro toto pole potřebujeme alokovat pouze osminu paměti oproti původnímu akumulátorovému poli. Pomocí tohoto algoritmu projdeme celé pole a vyhledáme všechny vrcholy.
 
-Samotný flood fill implementujeme pomocí fronty. Do té se nejprve přidá výchozí políčko. Poté začneme z fronty políčka vybírat. Vždy sa zkontroluje všech 8 sousedních směrů a pokud nalezneme políčko, které je vyšší než práh a ještě jsme ho neprohledali, přidáme ho do fronty. Takto pokračujeme , dokud jsou ve frontě nějaká políčka. Zároveň si při tomto procesu rovou ukládáme nejvyšší políčko, na kterém jsme byli. To využijeme k identifikaci daného vrcholu.
+Samotný flood fill implementujeme pomocí fronty. Do té se nejprve přidá výchozí políčko. Poté začneme z fronty políčka vybírat. Vždy se zkontroluje všech 8 sousedních směrů a pokud nalezneme políčko, které je vyšší než práh a ještě jsme ho neprohledali, přidáme ho do fronty. Takto pokračujeme, dokud jsou ve frontě nějaká políčka. Zároveň si při tomto procesu zároveň ukládáme nejvyšší políčko, na kterém jsme byli. To využijeme k identifikaci daného vrcholu.
 
-Celý tento proces jsme vytvořili na základě toho, že vrchol je spojitá oblast vyšší, než daný práh. Zatím jsme však neurčili, jak tuto hodnotu získat, což je samozřejmě pro algoritmus naprosto zásadní. Tato hodnota bude velmi závislá na počtu bodů a počtu očekávaných rovin v mračnu. Počet bodů v mračnu nicméně není pro definici tolik zásadní, protože ten ovlivňuje velikost akumulátorového pole. Takže nejde jednoduše určit vztah mezi velikostí vrcholů a počtem vstupních bodů. Důležitějším faktorem bude počet rovin ve vstupním mračnu. Pokud bude mít mračno např. 4 roviny, dá se očekávat, že vzniknou 4 vysoké vrcholy. Pokud bude ale v mračnu rovin 15, bude pravděpodobně většina vrcholů mnohem nižších. Počet rovin však algoritmus nemůže žádným způsobem odhadnout, bude tedy nutné, aby tento parametr nějakým způsobem ovlivnil uživatel. Byl by samozřejmě nesmysl, aby uživatel zadával samotný práh nebo případně nějakou očekávanou velikost vrcholů, uživatel samozřejmě nemusí vůbec vědět, jak algoritmus funguje a takové hodnoty by nebyl schopný odhadnout. Uživatel je však schopen odhadnout počet rovin v mračnu. Práh jsem se tedy rozhodl tak, že jeho výchozí hodnota bude nastavená na velikost akumulátorového pole (tím bude částečně refektovat počet bodů v mračnu). Uživatel poté zadá hodnotu, která bude řádově odpovídat očekávanému počtu rovin a touto hodnotou vydělíme výchozí nastavení prahu. Je nutné zdůraznit, že počet rovin bude tomuto parametru odpovídat pouze velmi přibližně. Uživatel spíše zadá ze začátku nižší hodnotu a pokud bude nalezeno příliš málo rovin, tak rovinu zvýší. Algoritmus bude uzpůsobený tomu, aby měl uživatel možnost tuto hodnotu za běhu upravovat. Více o použití a zadávání této hodnoty bude zmíněno v sekci \ref{sub:pouziti} a v kapitole \ref{chap:test}.
+Celý tento proces jsme vytvořili na základě toho, že vrchol je spojitá oblast vyšší, než daný práh. Zatím jsme však neurčili, jak velikost prahu získat, což je samozřejmě pro algoritmus naprosto zásadní. Tato hodnota bude velmi závislá na počtu bodů a počtu očekávaných rovin v mračnu. Počet bodů v mračnu nicméně není pro definici tolik zásadní, protože ten ovlivňuje velikost akumulátorového pole. Tím pádem také nejde jednoduše určit vztah mezi velikostí vrcholů a počtem vstupních bodů. Důležitějším faktorem bude počet rovin ve vstupním mračnu. Pokud bude mít mračno např. 4 roviny, dá se očekávat, že vzniknou 4 vysoké vrcholy. Pokud bude ale v mračnu rovin 15, bude pravděpodobně většina vrcholů mnohem nižších. Počet rovin však algoritmus nemůže žádným způsobem odhadnout, bude tedy nutné, aby tento parametr nějakým způsobem ovlivnil uživatel. Byl by samozřejmě nesmysl, aby uživatel zadával samotný práh nebo případně nějakou očekávanou velikost vrcholů, uživatel samozřejmě nemusí vůbec vědět, jak algoritmus funguje a takové hodnoty by nebyl schopný odhadnout. Uživatel je však schopen odhadnout počet rovin v mračnu. Práh jsem se tedy rozhodl určit tak, že jeho výchozí hodnota bude nastavená na velikost akumulátorového pole (tím bude částečně reflektovat počet bodů v mračnu). Uživatel poté zadá hodnotu, která bude řádově odpovídat očekávanému počtu rovin a touto hodnotou vydělíme výchozí nastavení prahu. Je nutné zdůraznit, že počet rovin bude tomuto parametru odpovídat pouze velmi přibližně. Uživatel spíše zadá ze začátku nižší hodnotu a pokud bude nalezeno příliš málo rovin, tak hodnotu zvýší. Algoritmus bude uzpůsobený tomu, aby měl uživatel možnost tuto hodnotu za běhu upravovat. Více o použití a zadávání této hodnoty bude zmíněno v sekci \ref{sub:param} a v kapitole \ref{chap:test}.
 
-Máme tedy hotovou část, kdy jsme identifikovali vrcholy v poli a máme uložené souřadnice nejvyšších políček z těchto vrcholů. Nyní potřebujeme z každého vrcholu vybrat body, které patří do jednoho segmentu. Postup je takový, že vždy vybereme body z nejvyšší buňky, ty proložíme plochou a vypočítáme RMS. Poté procházíme okolní buňky (viz Obr. \ref{fig:acc-pole-clus}) a pokud body mají vzdálenost od proložené roviny menší než 2$\times$RMS (leží ve stejné rovině) a zároveň jsou blízko k ostatní bodům v prostoru, tak je přidáme do segmentu. Tímto procesem bychom měli postupně projít všechny vrcholy. Tento proces má v zásadě dvě problematické části. Prvním problémem je, jak určit, že je bod blízko k osoatním bodům v prostoru. Podle teorie by se měla spočítat průměrná vzdálenost mezi všemni body v nejvyšším políčku vrcholu. Pro každý bod by se poté zjišťovalo, jestli je jeho průměrná vzdálenost ke všem bodům srovnatelná. Toto řešení je ale velmi neefektivní, protože pro každý bod musíme počítat vzdálenost ke všem ostatním bodům v segmentu. Nicméně podobnou podmínku je třeba při přidávání bodů do segmentu zachovat. Proto zkonstruujeme nad body z nejvyšší buňky kd-strom. Při přidání nového bodu vždy vezmeme nejbližšího souseda a zjistíme jeho vzdálenost. Pokud je tato vzdálenost srovnatelná s průměrnou vzdáleností mezi body (tu v tomto případě také musíme spočítat), tak můžeme bod do segementu přidat. Tabulka \ref{table:podminka-vzdalenosti} ukazuje rozdíly v časech při klastrování s použitím průměrné vzdálenosti od všech bodů a při použití kd-stromu. Z tabulky je patrné, že použití kd-stromu je výrazně efektivnější, než druhá varianta. Parametry klastrování uvedené v tabulce budou vysvětleny později.
+Máme tedy hotovou část, kdy jsme identifikovali vrcholy v poli a máme uložené souřadnice nejvyšších políček z těchto vrcholů. Nyní potřebujeme z každého vrcholu vybrat body, které patří do jednoho segmentu. Postup je takový, že vždy vybereme body z nejvyšší buňky, ty proložíme plochou a vypočítáme RMS. Poté procházíme body z okolních buněk (viz Obr. \ref{fig:acc-pole-clus}), pokud mají body vzdálenost od proložené roviny menší než 2$\times$RMS (leží ve stejné rovině) a zároveň jsou blízko k ostatní bodům v prostoru, přidáme je do segmentu. Tímto procesem bychom měli postupně projít všechny vrcholy. Proces má v zásadě dvě problematické části. Prvním problémem je, jak určit, že je bod blízko k ostatním bodům v prostoru. Podle teorie by se měla spočítat průměrná vzdálenost mezi všemi body v nejvyšším políčku vrcholu. Pro každý bod by se poté zjišťovalo, jestli je jeho průměrná vzdálenost ke všem bodům srovnatelná. Toto řešení je ale velmi neefektivní, protože pro každý bod musíme počítat vzdálenost ke všem ostatním bodům v segmentu. Nicméně podobnou podmínku je třeba při přidávání bodů do segmentu zachovat. Proto zkonstruujeme nad body z nejvyšší buňky kd-strom. Při přidání nového bodu vždy vezmeme nejbližšího souseda a zjistíme jeho vzdálenost. Pokud je tato vzdálenost srovnatelná s průměrnou vzdáleností mezi body (tu v tomto případě také musíme spočítat), tak můžeme bod do segmentu přidat. Tabulka \ref{table:podminka-vzdalenosti} ukazuje rozdíly v časech při klastrování s použitím průměrné vzdálenosti od všech bodů a při použití kd-stromu. Z tabulky je patrné, že použití kd-stromu je výrazně efektivnější, než druhá varianta. Parametry klastrování uvedené v tabulce budou vysvětleny později v sekci \ref{sub:param}.
 
 \begin{table}[ht]
 \begin{tabular}{|c|l|r|r|}
 \hline
 \multicolumn{ 1}{|c|}{\textbf{Data}} & \multicolumn{ 1}{c|}{\textbf{Parametry}} & \multicolumn{ 2}{c|}{\textbf{Čas [s]}} \\ \hline
 \multicolumn{ 1}{|l|}{} & \multicolumn{ 1}{l|}{} & \multicolumn{1}{l|}{\textbf{Kd-strom}} & \multicolumn{1}{l|}{\textbf{Prům. Vzd.}} \\ \hline
-\multicolumn{ 1}{|c|}{291232 bodů} & 5 a 100 & 3 & 388 \\ \hline
-\multicolumn{ 1}{|l|}{} & 10 a 500 & 14 & 559 \\ \hline
-723695 bodů & 2 a 100 & 26 & $>$3600 \\ \hline
+\multicolumn{ 1}{|c|}{291232 bodů} & 5 a 1 & 3 & 388 \\ \hline
+\multicolumn{ 1}{|l|}{} & 10 a 5 & 14 & 559 \\ \hline
+723695 bodů & 2 a 1 & 26 & $>$3600 \\ \hline
 \end{tabular}
 
 \caption{Tabulka zobrazuje rozdílné časy klastrování, pokud vyhledáváme nejbližší bod v kd-stromu nebo pokud počítáme průměrnou vzdálenost od všech bodů.} 
@@ -628,43 +635,42 @@ Druhou problematickou částí procesu je postupné vybírání bodů z akumulá
 \end{center}
 \end{figure}
 
-Řešení vůbec není jednoduché, nepodařilo se mi najít žádný způsob, kterým by šel tento problém detekovat a výrazně to nezhoršilo výkon algoritmu. Proto je nutné tento problém obejít a případně aspoň co nejvíce minimalizovat. Jedním ze způsobů, jak omezit výskyt takové situace, je nevybírat vrcholy z akumulátorového pole po jednom, ale vybírat všechny vrcholy po částech. Protože vybírání bodů z vrcholu je iterativní proces, implementace postupného vybírání všech vrcholů najednou je poměrně jednoduchá. Implementace bude taková, že budeme iterativně procházet jednotlivé vrcholy. V první iteraci vybereme z akumulátorového pole nejvyšší políčka ze všech vrcholů. V druhé itraci rozšíříme vyhledávání v každém vrcholu o okolní buňky (viz Obr. \ref{fig:acc-pole-clus}). Proces je tedy téměř stejný, jako byl původně navržený, jen nevybíráme jeden vrchol po druhém, ale iterativně je vybíráme všechny najednou.
+Řešení vůbec není jednoduché, nepodařilo se mi najít žádný způsob, kterým by šel tento problém detekovat a výrazně to nezhoršilo výkon algoritmu. Proto je nutné tento problém obejít a případně aspoň co nejvíce minimalizovat. Jedním ze způsobů, jak omezit výskyt takové situace, je nevybírat vrcholy z akumulátorového pole po jednom, ale vybírat všechny vrcholy najednou. Protože vybírání bodů z vrcholu je iterativní proces, implementace postupného vybírání všech vrcholů najednou je poměrně jednoduchá. Implementace bude taková, že budeme iterativně procházet jednotlivé vrcholy. V první iteraci vybereme z akumulátorového pole nejvyšší políčka ze všech vrcholů. V druhé itraci rozšíříme vyhledávání v každém vrcholu o okolní buňky (viz Obr. \ref{fig:acc-pole-clus}). Proces je tedy téměř stejný, jako byl původně navržený, jen nevybíráme jeden vrchol po druhém, ale iterativně je vybíráme všechny najednou.
 
-Nyní máme navržený celý proces klastrování, tak podrobněji popíšeme implementaci. Vrcholy v poli jsme již nalezli a máme uložené souřadnice všech nejvyšších políček z vrcholů. Protože budeme přidávat body do všech segmentů najedou, budeme potřebovat nějakou datovou strukturu, která nám bude udržovat body ze segmentu, společně s dalšími informacemi. Vytvoříme tedy třídu SegmentWrapper, která bude obsahovat souřadnice vrcholu, všechny body, které do segmentu patří, dále bude ukládat aktuální RMS, průměrnou vzdálenost mezi body a booleovskou hodnotu, která bude určovat, zda je segment již uzavřený nebo jestli do něj ještě přidáváme body. Vytvoříme si tedy seznam instancí těchto objektů. Velikost seznamu bude odpovídat počtu nalezených vrcholů v akumulátorovém poli, každá instance bude inicializována body z nejvyšší buňky. Tyto body budou přidány do segementu a odstraněny z akumulátorového pole.
+Nyní máme navržený celý proces klastrování, tak podrobněji popíšeme implementaci. Vrcholy v poli jsme již nalezli a máme uložené souřadnice všech nejvyšších políček z vrcholů. Protože budeme přidávat body do všech segmentů najedou, budeme potřebovat nějakou datovou strukturu, která nám bude udržovat body ze segmentu, společně s dalšími informacemi. Vytvoříme tedy třídu $SegmentWrapper$, která bude obsahovat souřadnice vrcholu, všechny body, které do segmentu patří, dále bude ukládat aktuální RMS, průměrnou vzdálenost mezi body a booleovskou hodnotu, která bude určovat, zda je segment již uzavřený nebo jestli do něj ještě přidáváme body. Poté vytvoříme seznam instancí těchto objektů na základě počtu nalezených vrcholů v poli. Velikost seznamu bude odpovídat počtu nalezených vrcholů v akumulátorovém poli, každá instance bude inicializována body z nejvyšší buňky. Tyto body budou přidány do segmentu a odstraněny z akumulátorového pole.
 
-Výsledný segment bude velmi ovlivněn parametry, které se vypočítají z těchto iniciálních bodů (zejména RMS). Proto je vhodné tyto body nejprve zpracovat a zahodit body, které nejsou s ostatními v rovině (tedy nějaký šum, který se náhodně trefil do vrcholu v akumuátorovém poli). Tento proces implementujeme velmi podobně, jako při definici okolí bodu. Nejprve vezmeme všechny body a proložíme je rovinou. Tuto rovinu převážíme stejným způsobem, jako při definici okolí. Poté spočteme RMS a zahodíme všechny body, které jsou od výsledné roviny dále, než 5$\times$RMS. Tyto body nezahodíme úplně, ale vrátíme je zpět do akumulátorového pole na jejich původní pozici. V tuto chvíli potřebujeme ošetřit situaci, kdy může více rovin splynout v jeden vrchol (tento problém je podrobně popsán na konci sekce \ref{sub:analyza-klastrovani}). Tento problém detekujeme tak, že opět přepočítáme RMS bodů v segmentu. Pokud je tato hodnota výrazně velká, body s nevětší pravděpodobností neleží v rovině. Velikost RMS porovnáme s velikostí koule definující okolí, kterou jsme vypočítali úplně na začátku algoritmu. Tato velikost bude vždy větší, než očekávané RMS u běžné roviny. Pokud tedy detekujeme tento problém, měli bychom ho řešit vytvořením nového akumulátorového pole a změnou pozice referenčních bodů podle rovnice \ref{eq:new-origins}. Tento postup je ale značně neefektivní, protože vyžaduje alokovat druhé akumulátorové pole stejné velikosti, jako to původní. Jednodušší postup je rekurzivně vytvořit novou instanci celého algoritmu a předat jí na vstupu pouze body způsobující problém. Nová instance je vrátí segmentované a tím jsme problém vyřešili. Akorát původní segment s více rovinami odstraníme ze seznamu a přídáme nově identifikované segmenty. Těmto segmentům nastavíme stejné souřadnice vrcholu a budeme do nich přidávat body stejným způsobem, jako do ostatních segmentů. Jediný problém, který při tomto procesu může teoreticky nastat je zacyklení v rekurzi. To vyřešíme tím, že nedovolíme algoritmu v rekurzi jít do větší hloubky. Taková situace je opravdu spíše jen teoretická, proto nemá smysl vymýšlet složitější řešení.
+Výsledný segment bude velmi ovlivněn parametry, které se vypočítají z těchto iniciálních bodů (zejména RMS). Proto je vhodné tyto body nejprve zpracovat a zahodit body, které nejsou s ostatními v rovině (tedy nějaký šum, který se náhodně trefil do vrcholu v akumuátorovém poli). Tento proces implementujeme velmi podobně, jako při definici okolí bodu. Nejprve vezmeme všechny body a proložíme je rovinou. Tuto rovinu převážíme stejným způsobem, jako při definici okolí. Poté spočteme RMS a ze segmentu odebereme všechny body, které jsou od výsledné roviny dále, než 5$\times$RMS. Tyto body ale nezahodíme úplně, ale vrátíme je zpět do akumulátorového pole na jejich původní pozici. V tuto chvíli potřebujeme ošetřit situaci, kdy může více rovin splynout v jeden vrchol (situace je podrobně popsána na konci sekce \ref{sub:analyza-klastrovani}). Tento problém detekujeme tak, že opět přepočítáme RMS bodů v segmentu. Pokud je tato hodnota výrazně velká, body s největší pravděpodobností neleží v rovině. Velikost RMS porovnáme s velikostí koule definující okolí, kterou jsme vypočítali úplně na začátku algoritmu. Tato velikost bude vždy větší, než očekávané RMS u běžné roviny. Pokud tedy detekujeme problém, měli bychom ho řešit vytvořením nového akumulátorového pole a změnou pozice referenčních bodů podle rovnice \ref{eq:new-origins}. Tento postup je ale značně neefektivní, protože vyžaduje alokovat druhé akumulátorové pole stejné velikosti, jako to původní. Jednodušší postup je rekurzivně vytvořit novou instanci celého algoritmu a předat jí na vstupu pouze body způsobující problém. Nová instance je vrátí segmentované a tím jsme problém vyřešili. Akorát původní segment s více rovinami odstraníme ze seznamu a přídáme nově identifikované segmenty. Těmto segmentům nastavíme stejné souřadnice vrcholu a budeme do nich přidávat body stejným způsobem, jako do ostatních segmentů. Jediný problém, který při tomto procesu může teoreticky nastat je zacyklení v rekurzi. To vyřešíme tím, že nedovolíme algoritmu v rekurzi jít do větší hloubky. Taková situace je opravdu spíše jen teoretická, proto nemá smysl vymýšlet složitější řešení.
 
-Ať už popsaný problém nastane nebo ne, výsledkem tohoto procesu je seznam segmentů, které mají určené souřadnice svých vrcholů, obsahují body z nejvyšší buňky vrcholů, mají těmito body proloženou rovinu a vypočtené RMS. Všechny tyto segmenty by už měly reprezentovat roviny a budou zahrnuty ve výstupu z algoritmu. Zbývá vybrat body z jednotlivých vrcholů a přiřadit je do těchto segmentů způsobem, který jsme navrhli výše. Budeme tedy iterativně procházet všechny vrcholy a v každé iteraci zvětšíme okolí vrcholu, které procházíme. Při procházení vrcholu testujeme každý bod, zda leží ve stejné rovině s ostatními body (pomocí RMS) a zda je blízko k ostatním bodům (pomocí kd-stromu). Bod, který přidáme do segmentu odebereme z akumulátorového pole. Pokud bod podmínky nesplní, v akumulátorovém poli ho ponecháme. Otázka je, kdy přesně ukončit přidávání bodů do segmentu. V analýze bylo navrženo, aby byl tento proces ukončen ve chvíli, kdy už do vrcholu nejsou přidány žádné body. To je ale v praxi samozřejmě nereálné, protože v pozdějších iteracích se prohledává poměrně velké množství políček a s velkou pravděpodobností by se vždy několik málo bodů přidalo a tento proces by byl velmi pomalý. Tuto podmínku tedy upravíme tak, že pokud se za jednu iteraci přidá nějaký zlomek z celkového počtu bodů v segmentu, bude proces ukončen. Tento zlomek jsem se rozhodl nenastavit napevno, ale ponechat tuto volbu na uživateli. Tím tedy zavádím do algoritmu třetí (a také poslední) parametr, pomocí kterého uživatel může ovlivňovat chování segmentace. Důvod je ten, že při vybírání bodů z vrcholu se v prvních iteracích rychle vybere většina bodů. Pokud tedy chceme proces co nejrychlejší, nastavíme zlomek např. na jednu setinu. Ve chvíli, kdy se v jedné iteraci přidá méně jak setina bodů segmentu, segment je uzavřen a už se do něj body nepřidávají. Takovýto proces je velmi rychlý, pro běžná mračna bodů trvá klastrování s tímto parametrem maximálně několik desítek vtěřin. Pokud nastavíme zlomek na jednu tisícinu, proces bude výrazně pomalejší, ale segmenty budou obsahhovat více bodů (budou tedy kvalitnější). Tedy stejně jako předchozí parametry, i tento umožňuje uživateli výběr mezi rychlostí a kvalitou. Pro jednoduchost se bude na vstupu od uživatele očekávat číslo řádově od jedné do deseti. Toto číslo se poté vynásobí stem a použije se jako hodnota zlomku. Pokud uživatel zadá jedna, proces bude tedy rychlý, ale méně kvalitní, oproti tomu deset bude pomalejší a kvalitnější. Uživatel bude mít samozřejmě možnost zadat libovolnou hodnotu z tohoto intervalu, případně i větší hodnotu než 10, pokud to bude mít smysl. Konkrétní dopady těchto hodnot navýslednou segmentaci jsou popsány v kapitole \ref{chap:test} věnované testování. 
+Ať už popsaný problém nastane nebo ne, výsledkem tohoto procesu je seznam segmentů, které mají určené souřadnice svých vrcholů, obsahují body z nejvyšší buňky vrcholů, mají těmito body proloženou rovinu a vypočtené RMS. Všechny tyto segmenty by už měly reprezentovat roviny a budou zahrnuty ve výstupu z algoritmu. Zbývá vybrat body z jednotlivých vrcholů a přiřadit je do těchto segmentů způsobem, který jsme navrhli výše. Budeme tedy iterativně procházet všechny vrcholy a v každé iteraci zvětšíme okolí vrcholu, které procházíme. Při procházení vrcholu testujeme každý bod, zda leží ve stejné rovině s ostatními body (pomocí RMS) a zda je blízko k ostatním bodům (pomocí kd-stromu). Bod, který přidáme do segmentu odebereme z akumulátorového pole. Pokud bod podmínky nesplní, v akumulátorovém poli ho ponecháme. Otázka je, kdy přesně ukončit přidávání bodů do segmentu. V analýze bylo navrženo, aby byl tento proces ukončen ve chvíli, kdy už do vrcholu nejsou přidány žádné body. To je ale v praxi samozřejmě nereálné, protože v pozdějších iteracích se prohledává poměrně velké množství políček a s velkou pravděpodobností by se vždy několik málo bodů přidalo a tento proces by se nemusel zastavit vůbec. Tuto podmínku tedy upravíme tak, že pokud se za jednu iteraci přidá nějaký zlomek z celkového počtu bodů v segmentu, bude proces ukončen. Tento zlomek jsem se rozhodl nenastavit napevno, ale ponechat tuto volbu na uživateli. Tím tedy zavádím do algoritmu třetí (a také poslední) parametr, pomocí kterého uživatel může ovlivňovat chování segmentace. Důvod je ten, že při vybírání bodů z vrcholu se v prvních iteracích rychle vybere většina bodů. Pokud tedy chceme proces co nejrychlejší, nastavíme zlomek např. na jednu setinu. Ve chvíli, kdy se v jedné iteraci přidá méně jak setina bodů segmentu, segment je uzavřen a už se do něj body nepřidávají. Takovýto proces je velmi rychlý, pro běžná mračna bodů trvá klastrování s tímto parametrem maximálně několik desítek vtěřin. Pokud nastavíme zlomek na jednu tisícinu, proces bude výrazně pomalejší, ale segmenty budou obsahovat více bodů (budou kvalitnější). Tedy stejně jako předchozí parametry, i tento umožňuje uživateli výběr mezi rychlostí a kvalitou. Pro zjednodušení se bude na vstupu od uživatele očekávat číslo řádově od jedné do deseti. Toto číslo se poté vynásobí stem a použije se jako hodnota zlomku. Pokud uživatel zadá jedna, proces bude tedy rychlý, ale méně kvalitní, oproti tomu deset bude pomalejší a kvalitnější. Uživatel bude mít samozřejmě možnost zadat libovolnou hodnotu z tohoto intervalu, případně i větší hodnotu než 10, pokud to bude mít smysl. Konkrétní dopady těchto hodnot na výslednou segmentaci jsou ukázány v kapitole \ref{chap:test} věnované testování. 
 
-Pokud jsou všechny segmenty ukončeny, proces ještě nekončí. Již na začátku kapitoly byl nastíněn problém, kdy mohou být dva vrcholy v akumulátorovém poli blízko sebe a algoritmus je nerozezná. V takovém případě bude vybrán jen jeden vrchol a druhý v akumulátorovém poli zůstane. Proto je celý proces klastrování navržen iterativně. V tuto chvíli projdeme aktuální stav akumulátorového pole a stejným způsobem jako na začátku vyhledáme vrcholy. Pokud jsou nějaké vrcholy nalezeny, algoritmus pokračuje standardním způsobem. Pokud žádné vrcholy nejsou nalezeny, prohledávání akumulátorového pole končí a metoda navrátí seznam všech nalezených segmentů. Tím je kompletně ukončena segmentace. 
+Pokud jsou všechny segmenty ukončeny, proces ještě není hotový. Již na začátku kapitoly byl nastíněn problém, kdy mohou být dva vrcholy v akumulátorovém poli blízko sebe a algoritmus je nerozezná. V takovém případě bude vybrán jen jeden vrchol a druhý v akumulátorovém poli zůstane. Proto je celý proces klastrování navržen iterativně. V tuto chvíli projdeme aktuální stav akumulátorového pole a stejným způsobem jako na začátku vyhledáme vrcholy. Pokud jsou nějaké vrcholy nalezeny, algoritmus pokračuje standardním způsobem. Pokud žádné vrcholy nejsou nalezeny, prohledávání akumulátorového pole končí a metoda navrátí seznam všech nalezených segmentů. Tím je kompletně ukončena segmentace. 
 
-Uživatel má však v tuto chvíli stále k dispozici ukazatel na zbylé akumulátorové pole. Může se tedy rozhodnout změnit hodnotu parametrů a segmentaci nad tímto zbylým polem provést znovu. Tento způsob dává uživateli poměrně mocný nástroj, jak vybírat roviny z akumulátorového pole postupně. Roviny, které vybere nejdříve, jsou teoreticky ty nejpřesnější a nejkvalitnější. S dalšími výběry poté kvalita rovin bude pravděpodobně klesat. Uživatel může tedy měnit parametry a vybírat roviny do té doby, dokud mu kvalita vybíraných rovin přijde dostatečná. Tento proces ale také vůbec nemusí použít a může navolit parametry tak, aby hned napoprvé bylo vybráno co nejvíce rovin. V tomto ohledu nabízí implementace algoritmu poměrně velkou volnost.
+Uživatel má však v tuto chvíli stále k dispozici ukazatel na zbylé akumulátorové pole. Může se tedy rozhodnout změnit hodnotu parametrů a segmentaci nad tímto zbylým polem provést znovu. Tento způsob dává uživateli poměrně mocný nástroj, jak vybírat roviny z akumulátorového pole postupně. Roviny, které vybere nejdříve, jsou teoreticky ty nejpřesnější a nejkvalitnější. Pokud bude uživatel postupně měnit paramtery a vybírat další roviny, bude jejich kvalita pravděpodobně klesat. Uživatel může tedy měnit parametry a vybírat roviny do té doby, dokud mu kvalita vybíraných rovin přijde dostatečná. Tento proces ale také vůbec nemusí použít a může navolit parametry tak, aby bylo hned napoprvé vybráno co nejvíce rovin. V tomto ohledu nabízí implementace algoritmu poměrně velkou volnost.
 
 
 \subsection{Rekapitulace zadávaných parametrů a jejich použití}
+\label{sub:param}
 
-Pro přehlednost bych rád zrekapituloval, jakým způsobem může uživatel ovlivnit výsledky segmentace. Definovali jsme celkem tři parametry, velikost koule definující okolí při výpočtu parametrů bodu a poté dva parametry při klastrování bodů. První parametr ovlivňuje okolí bodu, čímž zásadně ovlivňuje i vypočtené parametry bodu a tím celou segmentaci. Parametr se řádově volí z itervalu 20 - 200 bodů, kdy běžné hodnoty by měly být v rozsahu 40-80 bodů. Čím více bodů, tím by měl být výpočet parametrů bodu přesnější, ale také pomalejší. Zároveň ale musíme přizpůsobit hodnotu parametru vstupním datům, kdy pro horší data musíme volit spíše vyšší hodnotu parametru. 
+Pro přehlednost bych rád zrekapituloval, jakým způsobem může uživatel ovlivnit výsledky segmentace. Definovali jsme celkem tři parametry, velikost koule definující okolí při výpočtu parametrů bodu a poté dva parametry při klastrování bodů. První parametr ovlivňuje okolí bodu, čímž zásadně ovlivňuje i vypočítané parametry bodu a tím celou segmentaci. Parametr se řádově volí z itervalu 20 - 200 bodů, kdy běžné hodnoty by měly být v rozsahu 40 - 80 bodů. Čím více bodů, tím by měl být výpočet parametrů bodu přesnější, ale také pomalejší. Zároveň ale musíme přizpůsobit hodnotu parametru vstupním datům, kdy pro horší data musíme volit spíše vyšší hodnotu parametru. 
 
-Druhý parametr také velmi zásadně ovlivňuje výslednou segmentaci. Tento parametr ovlivňuje práh, který určuje jednotlivé vrcholy v akumulátorovém poli. Má tedy zejména vliv na kvalitu výsledné segmentace a nemá téměř žádný vliv na její rychlost. Hodnota parametru však není předem úplně jasná, je to velmi závislé na vstupním mračnu bodů. Hodnota velmi přibližně odpovídá očekávanému počtu rovin, ale nejde to vzít jako přesné kritérium. Parametr je nastavený tak, že čím větší hodnota je zadaná, tím je práh v akumulátorovém poli nižší, očekává se tedy více menších vrcholů. Pokud má vstupní mračnou např. 3 nebo 4 roviny, hodnota parametru se pravděpodobně bude pohybovat v rozsahu 1 - 3. Pokud má vstupní mračno rovin 15, parametr se pravděpodobně bude pohybovat v rozmezí 8 - 15.
+Druhý parametr také velmi zásadně ovlivňuje výslednou segmentaci. Tento parametr ovlivňuje práh, který určuje jednotlivé vrcholy v akumulátorovém poli. Má tedy zejména vliv na kvalitu výsledné segmentace a nemá téměř žádný vliv na její rychlost. Hodnota parametru však není předem úplně jasná, je to velmi závislé na vstupním mračnu bodů. Hodnota velmi přibližně odpovídá očekávanému počtu rovin, ale nejde to vzít jako přesné kritérium. Parametr je nastavený tak, že čím větší hodnota je zadaná, tím je práh v akumulátorovém poli nižší - očekává se tedy více menších vrcholů. Pokud má vstupní mračnou např. 3 nebo 4 roviny, hodnota parametru se pravděpodobně bude pohybovat v rozsahu 1 - 3. Pokud má vstupní mračno rovin 15, parametr se pravděpodobně bude pohybovat v rozmezí 8 - 15.
 
-Uživatel má 2 hlavní možnosti, jak tento parametr odhadovat. První možností je vybrat nějakou přibližnou hodnotu a ostatní parametry nastavit tak, aby byla segmentace rychlá a udělat \uv{testovací} segmentaci. Pokud je uživatel s výsledky spokojen, hodnotu parametru ponechá a ostatní parametry nastaví na větší kvalitu. Pokud není spokojen, změní parametr a provede testovací segmentaci znovu. Druhou možností je nastavit parametr na nízkou hodnotu. Segmentace proběhne a vybere z mračna jen ty největší a nejkvalitnější roviny. Uživatel má ale stále k dispozici zbylé akumulátorové pole, takže může parametr zvýšit asegmentaci pustit znovu. Segmentace by opět měla nalézt několik nových rovin. Tímto způsobem lze parametr postupně zvyšovat (a tím pádem snižovat práh), dokud je kvalita výstupních segmentů dostatečná.
+Uživatel má 2 hlavní možnosti, jak tento parametr odhadovat. První možností je vybrat nějakou přibližnou hodnotu a ostatní parametry nastavit tak, aby byla segmentace rychlá a udělat \uv{testovací} segmentaci. Pokud je uživatel s výsledky spokojen, hodnotu parametru ponechá a ostatní parametry nastaví na větší kvalitu. Pokud není spokojen, změní parametr a provede testovací segmentaci znovu. Druhou možností je nastavit parametr ze začátku na nízkou hodnotu. Segmentace proběhne a vybere z mračna jen ty největší a nejkvalitnější roviny. Uživatel má ale stále k dispozici zbylé akumulátorové pole, takže může parametr zvýšit a segmentaci spustit znovu. Segmentace by opět měla nalézt několik nových rovin. Tímto způsobem lze parametr postupně zvyšovat (a tím pádem snižovat práh), dokud je kvalita výstupních segmentů dostatečná.
 
-Třetí parametr ovlivňuje počet bodů zahrnutých do segmentu. Zde má uživatel opět velkou možnost volby mezi rychlostí a kvalitou. Pokud zadá nízkou hodnotu, např. 1, klastering bude velmi rychlý, ale segmenty budou obsahovat méně bodů, zvláště budou cybět body v okolí hran a nerovností v ploše. Oproti tomu pokud zadá vysokou hodnbotu, např. 10, algoritmus bude mnohem pomalejší, ale v segmentech bude zahrnuto více bodů.
+Třetí parametr ovlivňuje počet bodů zahrnutých do segmentu. Zde má uživatel opět velkou možnost volby mezi rychlostí a kvalitou. Pokud zadá nízkou hodnotu, např. 1, klastrování bude velmi rychlé, ale segmenty budou obsahovat méně bodů, zvláště budou chybět body v okolí hran a nerovností. Oproti tomu pokud zadá vysokou hodnotu, např. 10, algoritmus bude mnohem pomalejší, ale v segmentech bude zahrnuto více bodů.
 
-Konkrétní vliv těchto parametrů na výslednou segmentaci je podrobně posán v následující kapitole \ref{chap:test}, která se věnuuje testování
+Konkrétní vliv těchto parametrů na výslednou segmentaci je popsán v následující kapitole \ref{chap:test}, která se věnuje testování.
 
 \section{Struktura a použití zdrojového kódu}
 
 \subsection{Struktura zdrojového kódu}
 
-Tady bych jen tak nastínil hlavní části toho zdrojáku ve vztahu k tomu předchozímu popisu\ldots 
-takže jaký soubory mám, co v nich je, jaký mám třídy a jaký metody\ldots
+jaký soubory mám, co v nich je, jaký mám třídy a jaký maj metody\ldots
 
 \subsection{Ukázkové použití algoritmu}
 \label{sub:pouziti}
-Nějakej zdroják z mainu a možnosti použití
 
-
+nějakej zdroják z mainu a možnosti použití
 
 
 %*****************************************************************************
@@ -724,293 +730,6 @@ Nějakej zdroják z mainu a možnosti použití
 %*****************************************************************************
 \appendix
 
-
-
-%*****************************************************************************
-\chapter{Pokyny a návody k formátování textu práce}
-\textbf{\large Tato příloha samozřejmě nebude součástí vaší práce. Slouží pouze jako příklad formátování textu.}
-
-Používat se dají všechny příkazy systému \LaTeX. Existuje velké množství volně přístupné dokumentace,
-tutoriálů, příruček a dalších materiálů v elektronické podobě. Výchozím bodem, kromě Googlu, může být stránka
-CSTUG (Czech Tech Users Group) \cite{CSTUG}. Tam najdete odkazy na další materiály.  Vetšinou dostačující a
-přehledně organizovanou elektronikou dokumentaci najdete například na \cite{latexdocweb} nebo \cite{latexwiki}.
-
-Existují i různé nadstavby nad systémy \TeX{} a \LaTeX, které výrazně usnadní psaní textu zejména
-začátečníkům. Velmi rozšířený v Linuxovém prostředí je systém Kile.
-
-
-\section{Vkládání obrázků}
-Obrázky se umísťují do plovoucího prostředí \verb|figure|. Každý obrázek by měl obsahovat \textbf{název}
-(\verb|\caption|) a \textbf{návěští} (\verb|\label|). Použití příkazu pro vložení obrázku
-\\\verb|\includegraphics| je podmíněno aktivací (načtením) balíku graphicx příkazem\\
-\verb|\usepackage{graphicx}|.
-
-Budete-li zdrojový text zpracovávat pomocí programu \verb|pdflatex|, očekávají se obrázky s příponou
-\verb|*.pdf|\footnote{pdflatex umí také formáty PNG a JPG.}, použijete-li k formátování \verb|latex|,
-očekávají se obrázky s příponou \verb|*.eps|.\footnote{Vzájemnou konverzi mezi snad všemi typy obrazku včetně
-změn vekostí a dalších vymožeností vám může zajistit balík ImageMagic 
-(http://www.imagemagick.org/script/index.php). Je dostupný pod Linuxem, Mac OS i MS Windows. Důležité jsou
-zejména příkazy convert a identify.}
-
-\begin{figure}[ht]
-\begin{center}
-\includegraphics[width=5cm]{figures/LogoCVUT}
-\caption{Popiska obrázku}
-\label{fig:logo}
-\end{center}
-\end{figure}
-
-Příklad vložení obrázku:
-\begin{verbatim}
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=5cm]{figures/LogoCVUT}
-\caption{Popiska obrazku}
-\label{fig:logo}
-\end{center}
-\end{figure}
-\end{verbatim}
-
-\section{Kreslení obrázků}
-Zřejmě každý z vás má nějaký oblíbený nástroj pro tvorbu obrázků. Jde jen o to, abyste dokázali obrázek uložit
-v požadovaném formátu nebo jej do něj konvertovat (viz předchozí kapitola). Je zřejmě vhodné kreslit obrázky
-vektorově. Celkem oblíbený, na ovládání celkem jednoduchý a přitom dostatečně mocný je například program Inkscape.
-
-Zde stojí za to upozornit na kreslící programe Ipe \cite{ipe}, který dokáže do obrázku vkládat komentáře přímo
-v latexovském formátu (vzroce, stejné fonty atd.). Podobné věci umí na Linuxové platformě nástroj Xfig.
-
-Za pozornost ještě stojí schopnost editoru Ipe importovat obrázek (jpg nebo bitmap) a krelit do něj latexovské
-popisky a komentáře. Výsledek pak umí exportovat přímo do pdf.
-
-\section{Tabulky}
-Existuje více způsobů, jak sázet tabulky. Například je možno použít prostředí \verb|table|, které je velmi
-podobné prostředí \verb|figure|.
-
-\begin{table}
-\begin{center}
-\begin{tabular}{|c|l|l|}
-\hline
-\textbf{DTD} & \textbf{construction} & \textbf{elimination} \\
-\hline
-$\mid$ & \verb+in1|A|B a:sum A B+ & \verb+case([_:A]a)([_:B]a)ab:A+\\
-&\verb+in1|A|B b:sum A B+ & \verb+case([_:A]b)([_:B]b)ba:B+\\
-\hline
-$+$&\verb+do_reg:A -> reg A+&\verb+undo_reg:reg A -> A+\\
-\hline
-$*,?$& the same like $\mid$ and $+$ & the same like $\mid$ and $+$\\
-& with \verb+emtpy_el:empty+ & with \verb+emtpy_el:empty+\\
-\hline
-R(a,b) & \verb+make_R:A->B->R+ & \verb+a: R -> A+\\
- & & \verb+b: R -> B+\\
-\hline
-\end{tabular}
-\end{center}
-\caption{Ukázka tabulky}
-\label{tab:tab1}
-\end{table}
-
-Zdrojový text tabulky \ref{tab:tab1} vypadá takto:
-\begin{verbatim}
-\begin{table}
-\begin{center}
-\begin{tabular}{|c|l|l|}
-\hline
-\textbf{DTD} & \textbf{construction} & \textbf{elimination} \\
-\hline
-$\mid$ & \verb+in1|A|B a:sum A B+ & \verb+case([_:A]a)([_:B]a)ab:A+\\
-&\verb+in1|A|B b:sum A B+ & \verb+case([_:A]b)([_:B]b)ba:B+\\
-\hline
-$+$&\verb+do_reg:A -> reg A+&\verb+undo_reg:reg A -> A+\\
-\hline
-$*,?$& the same like $\mid$ and $+$ & the same like $\mid$ and $+$\\
-& with \verb+emtpy_el:empty+ & with \verb+emtpy_el:empty+\\
-\hline
-R(a,b) & \verb+make_R:A->B->R+ & \verb+a: R -> A+\\
- & & \verb+b: R -> B+\\
-\hline
-\end{tabular}
-\end{center}
-\caption{Ukázka tabulky}
-\label{tab:tab1}
-\end{table}
-\begin{table}
-\end{verbatim}
-
-\section{Odkazy v textu}
-\subsection{Odkazy na literaturu}
-Jsou realizovány příkazem \verb|\cite{odkaz}|. 
-
-Seznam literatury je dobré zapsat do samostatného souboru a ten pak zpracovat programem bibtex (viz soubor
-\verb|reference.bib|). Zdrojový soubor pro \verb|bibtex| vypadá například takto:
-\begin{verbatim}
-@Article{Chen01,
-  author  = "Yong-Sheng Chen and Yi-Ping Hung and Chiou-Shann Fuh",
-  title   = "Fast Block Matching Algorithm Based on 
-             the Winner-Update Strategy",
-  journal = "IEEE Transactions On Image Processing",
-  pages   = "1212--1222",
-  volume  =  10,
-  number  =   8,
-  year    = 2001,
-}
-
-@Misc{latexdocweb,
-  author  = "",
-  title   = "{\LaTeX} --- online manuál",
-  note    = "\verb|http://www.cstug.cz/latex/lm/frames.html|",
-  year    = "",
-}
-...
-\end{verbatim}
-
-%11.12.2008, 3.5.2009
-\textbf{Pozor:} Sazba názvů odkazů je dána Bib\TeX{} stylem\\ (\verb|\bibliographystyle{abbrv}|). 
-%Budete-li používat české prostředí (\verb|\usepackage[czech]{babel}|), 
-Bib\TeX{} tedy obvykle vysází velké pouze počáteční písmeno z názvu zdroje, 
-ostatní písmena zůstanou malá bez ohledu na to, jak je napíšete. 
-Přesněji řečeno, styl může zvolit pro každý typ publikace jiné konverze. 
-Pro časopisecké články třeba výše uvedené, jiné pro monografie (u nich často bývá 
-naopak velikost písmen zachována).
-
-Pokud chcete Bib\TeX u napovědět, která písmena nechat bez konverzí 
-(viz \texttt{title = "\{$\backslash$LaTeX\} -{}-{}- online manuál"} 
-v~předchozím příkladu), je nutné příslušné písmeno (zde celé makro) uzavřít 
-do složených závorek. Pro přehlednost je proto vhodné celé parametry 
-uzavírat do uvozovek (\texttt{author = "\dots"}), nikoliv do složených závorek.
-
-Odkazy na literaturu ve zdrojovém textu se pak zapisují:
-\begin{verbatim}
-Podívejte se na \cite{Chen01}, 
-další detaily najdete na \cite{latexdocweb}
-\end{verbatim}
-
-Vazbu mezi soubory \verb|*.tex| a \verb|*.bib| zajistíte příkazem 
-\verb|\bibliography{}| v souboru \verb|*.tex|.  V našem případě tedy zdrojový 
-dokument \verb|thesis.tex| obsahuje příkaz\\
-\verb|\bibliography{reference}|.
-
-Zpracování zdrojového textu s odkazy se provede postupným voláním programů\\
-\verb|pdflatex <soubor>| (případně \verb|latex <soubor>|), \verb|bibtex <soubor>| 
-a opět\\ \verb|pdflatex <soubor>|.\footnote{První volání \texttt{pdflatex} 
-vytvoří soubor s~koncovkou \texttt{*.aux}, který je vstupem pro program 
-\texttt{bibtex}, pak je potřeba znovu zavolat program \texttt{pdflatex} 
-(\texttt{latex}), který tentokrát zpracuje soubory s příponami \texttt{.aux} a 
-\texttt{.tex}. 
-Informaci o případných nevyřešených odkazech (cross-reference) vidíte přímo při 
-zpracovávání zdrojového souboru příkazem \texttt{pdflatex}. Program \texttt{pdflatex} 
-(\texttt{latex}) lze volat vícekrát, pokud stále vidíte nevyřešené závislosti.}
-
-
-Níže uvedený příklad je převzat z dříve existujících pokynů studentům, kteří 
-dělají svou diplomovou nebo bakalářskou práci v~Grafické skupině.\footnote{Několikrát 
-jsem byl upozorněn, že web s těmito pokyny byl zrušen, proto jej zde přímo necituji. 
-Nicméně příklad sám o sobě dokumentuje obecně přijímaný konsensus ohledně citací 
-v~bakalářských a diplomových pracích na KP.} Zde se praví:
-\begin{small}
-\begin{verbatim}
-...
-j) Seznam literatury a dalších použitých pramenů, odkazy na WWW stránky, ...
- Pozor na to, že na veškeré uvedené prameny se musíte v textu práce 
- odkazovat -- [1]. 
-Pramen, na který neodkazujete, vypadá, že jste ho vlastně nepotřebovali 
-a je uveden jen do počtu. Příklad citace knihy [1], článku v časopise [2], 
-stati ve sborníku [3] a html odkazu [4]: 
-[1] J. Žára, B. Beneš;, and P. Felkel. 
-     Moderní počítačová grafika. Computer Press s.r.o, Brno, 1 edition, 1998. 
-     (in Czech). 
-[2] P. Slavík. Grammars and Rewriting Systems as Models for Graphical User 
-     Interfaces. Cognitive Systems, 4(4--3):381--399, 1997. 
-[3] M. Haindl, Š. Kment, and P. Slavík. Virtual Information Systems. 
-     In WSCG'2000 -- Short communication papers, pages 22--27, Pilsen, 2000. 
-     University of West Bohemia. 
-[4] Knihovna grafické skupiny katedry počítačů: 
-     http://www.cgg.cvut.cz/Bib/library/ 
-\end{verbatim}
-\end{small}
-\ldots{} abychom výše citované odkazy skutečně našli v (automaticky generovaném) seznamu literatury tohoto
-textu, musíme je nyní alespoň jednou citovat: Kniha \cite{kniha}, článek v~časopisu \cite{clanek}, příspěvek
-na konferenci \cite{sbornik}, www odkaz \cite{www}.
-
-Ještě přidáme další ukázku citací online zdrojů podle české normy. Odkaz na wiki o frameworcich
-\cite{wiki:framework} a ORM \cite{wiki:orm}. Použití viz soubor \verb|reference.bib|. V seznamu literatury by
-nyní měly být živé odkazy na zdroje. V \verb|reference.bib| je zcela nový typ publikace. Detaily dohledal a
-dodal Petr Dlouhý v dubnu 2010. Podrobnosti najdete ve zdrojovém souboru tohoto textu v komentáři u příkazu
-\verb|\thebibliography|.
-
-\subsection{Odkazy na obrázky, tabulky a kapitoly}
-\begin{itemize}
-\item Označení místa v textu, na které chcete později čtenáře práce odkázat, se provede příkazem
-\verb|\label{navesti}|. Lze použít v prostředích \verb|figure| a  \verb|table|, ale též za názvem kapitoly
-nebo podkapitoly.
-\item Na návěští se odkážeme příkazem \verb|\ref{navesti}| nebo \verb|\pageref{navesti}|.
-\end{itemize}
-
-\section{Rovnice, centrovaná, číslovaná matematika}
-Jednoduchý matematický výraz zapsaný přímo do textu se vysází pomocí prostředí \verb|math|, resp. zkrácený
-zápis pomocí uzavření textu rovnice mezi znaky \verb|$|.
-
-Kód \verb|$ S = \pi * r^2 $| bude vysázen takto: $ S = \pi * r^2 $.
-
-Pokud chcete nečíslované rovnice, ale umístěné centrovaně na samostatné řádky, pak lz  použít prostředí
-\verb|displaymath|, resp. zkrácený zápis pomocí uzavření textu rovnice mezi znaky \verb|$$|. Zdrojový kód:
-\begin{verb}
-|$$ S = \pi * r^2 $$|
-\end{verb}
-bude pak vysázen takto:
-$$ S = \pi * r^2 $$
-
-Chcete-li mít rovnice číslované, je třeba použít prostředí \verb|eqation|. Kód:
-\begin{verbatim}
-\begin{equation}
-  S = \pi * r^2
-\end{equation}
-
-\begin{equation}
-  V = \pi * r^3
-\end{equation}
-\end{verbatim}
-je potom vysázen takto:
-\begin{equation}
-  S = \pi * r^2
-\end{equation}
-
-\begin{equation}
-  V = \pi * r^3
-\end{equation}
-
-\section{Kódy programu}
-Chceme-li vysázet například část zdrojového kódu programu (bez formátování), hodí se prostředí \verb|verbatim|: 
-\begin{verbatim}
-         (* nickname2 *)
-Lego> Refine in1
-             (do_reg (nickname1 h));
-Refine by  in1 (do_reg (nickname1 h))
-   ?4 : pcdata
-   ?5 : pcdata
-          (* surname2 *)
-Lego> Refine surname1 h;
-Refine by  surname1 h
-   ?5 : pcdata
-          (* email2 *)
-Lego> Refine undo_reg (email1 h);
-Refine by  undo_reg (email1 h)
-*** QED ***
-\end{verbatim}
-
-\section{Další poznámky}
-\subsection{České uvozovky}
-V souboru \verb|k336_thesis_macros.tex| je příkaz \verb|\uv{}| pro sázení českých uvozovek. \uv{Text uzavřený
-do českých uvozovek.}
-
-% JZ: 3.5.2009 \chapter z book zajistí automaticky
-%\subsection{Začátky kapitol na liché stránky}
-%Ve výsledném textu je dobré, když každá kapitola začíná na liché stránce. Tedy použijte:
-%\begin{verbatim}
-%  \cleardoublepage\include{1_uvod}
-%  \cleardoublepage\include{2_teorie}
-%   atd.\ldots{}
-%\end{verbatim}
-
 %*****************************************************************************
 \chapter{Seznam použitých zkratek}
 
@@ -1024,7 +743,7 @@ do českých uvozovek.}
 
 %*****************************************************************************
 \chapter{Instalační a uživatelská příručka}
-Tato příloha velmi žádoucí zejména u softwarových implementačních prací
+Tady asi nemám moc co psát\ldots
 
 
 %*****************************************************************************
