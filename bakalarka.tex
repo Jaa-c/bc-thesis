@@ -765,7 +765,7 @@ Tyto dvě public metody jsou delegovány na přetížené private metody, které
 \subsection{Ukázkové použití algoritmu}
 \label{sub:pouziti}
 
-Jak bylo naznačeno v sekci \ref{sub:param}, jsou dvě základní možnosti, jak algoritmus používat. V ukázce použití uvedu tu složitější variantu, kdy se nejprve provede ukložení bodů do akumulátorového pole a poté je možné provést klastrování bodů vícekrát. Zdrojový kód této varianty je zobrazen v ukázce \ref{code:usage}. 
+Jak bylo naznačeno v sekci \ref{sub:param}, jsou dvě základní možnosti, jak algoritmus používat. V ukázce použití uvedu tu složitější variantu, kdy se nejprve provede uložení bodů do akumulátorového pole a poté je možné provést klastrování bodů vícekrát. Zdrojový kód této varianty je zobrazen v ukázce \ref{code:usage}. 
 
 \begin{lstlisting}[label={code:usage},caption={Ukázkové použití implementace algoritmu.}]
 //nacteme vstupni mracno
@@ -798,22 +798,36 @@ while(true) {
 		HashMap<Integer, ArrayList<Point3D>> spc = segmentation.getSegmentedPointCloud();
 		VRMLexporter.exportSegmentedPointClouds(spc,new File("out-iterace.wrl"));
 
-		param = getInput("Pokud chcete pokracovat v tomto clusteringu, "
+		param = getInput("Pokud chcete pokracovat v tomto klastrovani, "
 			+ "zadejte vyssi hodnotu parametru pro klastrovani, "
-			+ "(0 = konec klastrovani): ");
+			+ "(0 = konec tohoto klastrovani): ");
 		if(param == 0) break;
 	} while(true);
+	//podminka, zda pokracovat novym klastrovanim...
 }
 \end{lstlisting}
 
-Pro načtení uživatelského vstupu je zde použita metoda \verb|getInput|, které uživateli vypíše zadaný text a vrací jím zadaný parametr. Tato metoda není nikde implementována, to není účelem této ukázky, je zde jen pro ilustraci. Důležité je, že po zadání velikosti okolí se provede uložení mračna bodů do akumulátorového pole, viz řádek 13. Toto se provede za celý běh algoritmu pouze jednou.  Poté následuje cyklus, který nám umožňuje získané akumulátorové pole segmentovat vícekrát. To je zajištěno tak, že na začátku každého cyklu se vytvoří klon původního akumulátorového pole, které se vůbec nezpracovává, operace se provádí pouze nad klonovaným polem. Poté jsou od uživatele vyžádány zbylé dva parametry segmentace. Poté se provede klastrování bodů, viz řádek 28. Uloží se výsledek klastrování a poté uživatel dostane na výběr, jestli chce v tomto jednom klastrování pokračovat. Pokud ano, zadá vyšší parametr klastrování a to proběhne opět na zbylém akumulátorovém poli. V tomto kroku se vyberou další, menší roviny. Tento krok je možné opakovat, dokud jsou segmentované roviny dostatečně kvalitní. Po ukončení tohoto cyklu se proces vrací na začátek, kdy se naklonuje nové pole, a je možné provést klastrování znovu od začátku s jinými parametry.
+Pro načtení uživatelského vstupu je zde použita metoda \verb|getInput|, která uživateli vypíše zadaný text a vrací jím zadaný parametr. Tato metoda není nikde implementována, to není účelem této ukázky, je zde jen pro ilustraci. Důležité je, že po zadání velikosti okolí se provede uložení mračna bodů do akumulátorového pole, viz řádek 13. Toto se provede za celý běh algoritmu pouze jednou.  Poté následuje cyklus, který nám umožňuje získané akumulátorové pole segmentovat vícekrát. To je zajištěno tak, že na začátku každého cyklu se vytvoří klon původního akumulátorového pole, které se vůbec nezpracovává, operace se provádí pouze nad klonovaným polem. Poté jsou od uživatele vyžádány zbylé dva parametry segmentace a následně se provede klastrování bodů, viz řádek 28. Uloží se výsledek klastrování a uživatel dostane na výběr, jestli chce v tomto jednom klastrování pokračovat. Pokud ano, zadá vyšší parametr klastrování a to proběhne opět na zbylém akumulátorovém poli. V tomto kroku se vyberou další, menší roviny. Tento krok je možné opakovat, dokud jsou segmentované roviny dostatečně kvalitní. Po ukončení tohoto cyklu se proces vrací na začátek, kdy se naklonuje nové pole, a je možné provést klastrování znovu od začátku s jinými parametry.
 
 
 %*****************************************************************************
 \chapter{Testování}
 \label{chap:test}
 
+Testování probíhalo algoritmu dvěma způsoby. Nejprve je nutné na nějakých \uv{jednoduchých} datech ověřit, zda algortimus funguje správně a chová se tak, jak očekáváme. Teprve poté může být algoritmus testován na reálných datech, kde se testuje jednak správnost výsledků a dále také výkon algoritmu. Testovat správnost segmentace však není úplně jednoduché, protože je složité nějak ohodnotit kvalitu segmentace. Jedním kritériem může být kompletnost - kolik bodů z celkového počtu všech bodů bylo zahrnuto do výsledných segmentů. Jenže v dodaných reálných datech je vždy poměrně velký počet bodů, které v žádných rovinách neleží a očekává se, že budou během segmentace zahozeny. Takže tato hodnota má jen omezenou vypovídající hodnotu. Jako další kritérium pro testování se nabízí počet výsledných segmentů. Tato hodnota se dá porovnat s očekávaným počtem segmentů v daném mračnu. Zároveň se však musí porovnat očekávané segmenty jednotlivě, tedy jestli nalezený segment odpovídá danému očekávanému segmentu. Testování bude postaveno na těchto dvou kritériích. Samozřejmě bude také testován výkon, zajímat nás bude zejména doba segmentace a spotřeba paměti za běhu algoritmu.
+
+Veškeré testování probíhalo v této konfiguraci:
+\begin{itemize}
+ \item procesor: Intel Core 2 Duo T6670 2,20 GHz, 2MB L2 Cache, FSB 800 MHz
+ \item paměť: 2 x 2GB DDR3 1066 MHz 
+ \item operační systém: OpenSUSE 12.1 32bit, jádro verze 3.3.3-21
+ \item Java: verze 1.6.0\_24, Java HotSpot VM 20.4-b02
+\end{itemize}
+
+
+
 \section{Ověření funkčnosti na umělých datech}
+
 
 \section{Testování kvality algoritmů na reálných datech}
 
