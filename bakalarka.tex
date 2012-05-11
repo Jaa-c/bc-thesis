@@ -44,6 +44,40 @@
  % \newcommand{\bfig}{\begin{figure}\begin{center}}
  % \newcommand{\efig}{\end{center}\end{figure}}
  % umoznuje pouzit prikaz \bfig namisto \begin{figure}\begin{center} atd.
+ 
+  
+ 
+%jaa
+\usepackage{listings}
+\usepackage{courier}
+\lstset{
+	language=Java,
+	basicstyle=\footnotesize\ttfamily,
+	commentstyle=\color{gray},
+	keywordstyle=\color{blue},
+	stringstyle=\color{BurntOrange},
+	numbers=left,
+	numberstyle=\tiny\ttfamily,
+	%stepnumber=2,
+	numbersep=5pt,
+	tabsize=2,
+	showstringspaces=false,
+	extendedchars=true,
+	breaklines=true,
+	frame=b,
+	xleftmargin=17pt,
+	framexleftmargin=17pt,
+	framexrightmargin=5pt,
+	framexbottommargin=4pt,
+}
+\renewcommand*\lstlistingname{Zdrojový kód}
+\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{caption}
+\DeclareCaptionFont{white}{\color{white}}
+\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+
 
 \newcommand\TypeOfWork{Bakalářská práce}  \typeout{Bakalarska prace}
 \newcommand\StudProgram{Softwarové technologie a management, Bakalářský}
@@ -480,6 +514,7 @@ Stejně musíme upravit definici matice $M$, která bude v každém řádku obsa
 Tato kapitola se zabývá popisem implementace obou algoritmů. Algoritmy jsou implementovány v jazyce Java v rámci dodaného softwaru ArchiRec3D \cite{AR3D}. Kompletní zdrojový kód je k dispozici na přiloženém CD, viz kapitola~\ref{chap:CD}.
 
 \section{Segmentace na základě velikosti normálového vektoru}
+\label{sec:seg1}
 
 Implementaci tohoto algoritmu můžeme rozdělit na dvě hlavní části. První částí je výpočet parametrů pro všechny body a uložení bodů do akumulátorového pole. Druhou částí bude poté klastrování bodů v akumulátorovém poli. Tyto dvě části budou reprezentovány jako samostatné metody. První metoda bude mít na vstupu zpracovávané mračno bodů a jejím výstupem bude akumulátorové pole naplněné všemi body ze vstupního mračna. Druhá metoda bude mít toto akumulátorové pole na vstupu a výstupem budou body rozdělené do jednotlivých sementů. Takovéto rozdělení má hlavní výhodu v tom, že obě části budou na sobě nezávislé. Bude tedy možné jednou uložit body do akumulátorového pole a poté provést klastrování několikrát s různými parametry bez nutnosti znovu provádět první část.
 
@@ -509,7 +544,7 @@ Hodnota, kterou uživatel zadá, se ještě přímo nevyužije k definici okolí
 
 V tuto chvíli již máme všechny potřebné informace pro výpočet parametrů všech bodů. Máme načtené body v kd-stromu, máme definované oba referenční body, dále máme vypočtenou velikost koule pro okolí bodu a máme připravené akumulátorové pole, do kterého budeme body ukládat. Vytvoříme tedy cyklus, pomocí kterého budeme procházet všechny body v mračnu.
 
-Nyní potřebujeme pro každý bod získat jeho okolí, tedy všechny body, které leží v kouli se středem v daném bodu a poloměrem, který jsme vypočítali. Víme, kolik by mělo být v této kouli průměrně bodů. Pro první iterovaný bod tedy vezmeme tento počet nejbližších sousedů. Vyhledávání $n$ nejbližších sousedů je v kd-stromu definovaná operace, takže je to velmi jednoduché. Dále si spočítáme vzdálenost zkoumaného bodu a nejvzdálenějšího bodu z vybraných sousedů (kd-strom vrací body seřazené podle vzdálenosti od původního bodu, takže nejvzdálenější bod je ten poslední v seznamu). Pokud je tato vzdálenost větší, než je velikost koule definující okolí, tak pomocí binárního prohledávání projdeme seznam sousedů a nalezneme nejvzdálenější bod, který ještě leží uvnitř koule. Všechny body, které jsou dál, zahodíme. Pokud nastane situace, kdy ještě nemáme dostatek bodů, vynásobíme aktuální počet vybraných sousedů $1,5 \times$ a tento nový počet opět vybereme z kd-stromu a testujeme. Takto pokračujeme do té doby, než máme dostatek bodů. Je potřeba zmínit, že tento iterativní proces by měl nastat co nejméně, protože vyhledávání nejbližších sousedů v kd-stromu je pomalá operace. Celý výše popsaný proces získávání bodů pro okolí je přehledně znázorněn na diagramu \ref{fig:diag-okoli}.
+Nyní potřebujeme pro každý bod získat jeho okolí, tedy všechny body, které leží v kouli se středem v daném bodu a poloměrem, který jsme vypočítali. Víme, kolik by mělo být v této kouli průměrně bodů. Pro první iterovaný bod tedy vezmeme tento počet nejbližších sousedů. Vyhledávání $n$ nejbližších sousedů je v kd-stromu definovaná operace, takže je to velmi jednoduché. Dále si spočítáme vzdálenost zkoumaného bodu a nejvzdálenějšího bodu z vybraných sousedů (kd-strom vrací body seřazené podle vzdálenosti od původního bodu, takže nejvzdálenější bod je ten poslední v seznamu). Pokud je tato vzdálenost větší, než je velikost koule definující okolí, tak pomocí binárního prohledávání projdeme seznam sousedů a nalezneme nejvzdálenější bod, který ještě leží uvnitř koule. Všechny body, které jsou dál, zahodíme. Pokud nastane situace, kdy ještě nemáme dostatek bodů, vynásobíme aktuální počet vybraných sousedů 1,5$\times$ a tento nový počet opět vybereme z kd-stromu a testujeme. Takto pokračujeme do té doby, než máme dostatek bodů. Je potřeba zmínit, že tento iterativní proces by měl nastat co nejméně, protože vyhledávání nejbližších sousedů v kd-stromu je pomalá operace. Celý výše popsaný proces získávání bodů pro okolí je přehledně znázorněn na diagramu \ref{fig:diag-okoli}.
 
 \begin{figure}[ht]
 \begin{center}
@@ -581,7 +616,7 @@ Zpět k implementaci algoritmu: jsme ve fázi, kdy máme vybrané okolí bodu a 
 
 Pokud se rovinu podaří proložit, pokračujeme úpravou této roviny pomocí převažování. Nejprve pro každý bod spočítáme váhu, což je inverze ke vzdálenosti bodu od roviny. Po vypočítání všech vah proložíme znovu rovinu všemi body, nicméně tentokrát využijeme váhy a váženou metodu nejmenších čtverců. Implementace vážené varianty metody nejmenších čtverců je téměř stejná jako běžné varianty, jenom se uvažují váhy při výpočtu centroidu a při konstrukci matice, nad kterou se poté provádí SVD. Po proložení roviny se rozhoduje, zda se opět vypočítají váhy a rovina se znovu proloží nebo zda se cyklus ukončí. Ukončení cyklu nastává ve dvou případech, pokud jsme již v desáté iteraci nebo pokud se parametry nové roviny výrazně neliší od poslední iterace. To zjistíme tak, že si udržujeme normálový vektor roviny z předchozí iterace a zjistíme jeho odchylku od normálového vektoru roviny ze současné iterace. Pokud je odchylka menší než např. $2^\circ$, tak cyklus ukončíme.
 
-Ačkoliv tento proces převažování vypadá na první pohled jednoduše, je zde malý problém s výpočtem vah, které se v rámci iterací mění pomalu a provádí se zbytečně velký počet iterací. Jako řešení se nabízí použít inverzi k druhé mocnině vzdálenosti bodu od roviny. Toto řešení funguje poměrně dobře a výrazně snižuje potřebný počet iterací a tím i celkový čas běhu algoritmu. Nicméně i toto řešení má jeden problém, váhy bodů blízko rovině mohou narůstat do výrazně velkých čísel, což může ovlivnit výsledek. Problém nastává také v okamžiku, kdy bod leží přímo na dané rovině. V tu chvíli jeho váha odpovídá hodnotě $^1/_0$, což Java převede na hodnotu $Double.INFINITY$. Pokud se takováto váha dostane do výpočtu SVD, tak sice nevznikne žádná výjimka a výpočet proběhne, nicméně výsledek výpočtu je vždy chybný. Tento problém jsme se snažil vyřešit tím, že jsem hodnotu nekonečna nahrazoval nějakou velkou konstantou (zkoušel jsem různé varianty od 10e5 do 10e50), nicméně v tomto případě se výpočet SVD choval velmi nepředvídatelně a vracel špatné výsledky. Takže jediné řešení, které se mi podařilo najít a funguje, je body s \uv{nekonečnou váhou} do výpočtu roviny vůbec nezahrnovat. Toto řešení také není příliš dobré, protože body, které by měly rovinu určovat nejlépe jsou z výpočtu vynechány. Naštěstí takovýchto bodů je při výpočtu zanedbatelné množství (v průměru je ovlivněna váha jednoho bodu u 1 - 2\% výpočtů rovin), takže na výslednou segmentaci nemá tento problém žádné rozpoznatelné důsledky.
+Ačkoliv tento proces převažování vypadá na první pohled jednoduše, je zde malý problém s výpočtem vah, které se v rámci iterací mění pomalu a provádí se zbytečně velký počet iterací. Jako řešení se nabízí použít inverzi k druhé mocnině vzdálenosti bodu od roviny. Toto řešení funguje poměrně dobře a výrazně snižuje potřebný počet iterací a tím i celkový čas běhu algoritmu. Nicméně i toto řešení má jeden problém, váhy bodů blízko rovině mohou narůstat do výrazně velkých čísel, což může ovlivnit výsledek. Problém nastává také v okamžiku, kdy bod leží přímo na dané rovině. V tu chvíli jeho váha odpovídá hodnotě $^1/_0$, což Java převede na hodnotu \verb|Double.INFINITY|. Pokud se takováto váha dostane do výpočtu SVD, tak sice nevznikne žádná výjimka a výpočet proběhne, nicméně výsledek výpočtu je vždy chybný. Tento problém jsme se snažil vyřešit tím, že jsem hodnotu nekonečna nahrazoval nějakou velkou konstantou (zkoušel jsem různé varianty od 10e5 do 10e50), nicméně v tomto případě se výpočet SVD choval velmi nepředvídatelně a vracel špatné výsledky. Takže jediné řešení, které se mi podařilo najít a funguje, je body s \uv{nekonečnou váhou} do výpočtu roviny vůbec nezahrnovat. Toto řešení také není příliš dobré, protože body, které by měly rovinu určovat nejlépe jsou z výpočtu vynechány. Naštěstí takovýchto bodů je při výpočtu zanedbatelné množství (v průměru je ovlivněna váha jednoho bodu u 1 - 2\% výpočtů rovin), takže na výslednou segmentaci nemá tento problém žádné rozpoznatelné důsledky.
 
 Po ukončení procesu převažování již můžeme definovat výsledné okolí, ze kterého přímo vypočítáme parametry bodu. Toto okolí definujeme tak, že nad a pod výslednou proloženou rovinou definujeme buffer (viz Obr. \ref{fig:definice-okoli}) a body, které leží mimo tento buffer zahodíme. Definice bufferu popsaná v sekci \ref{sub:def-okoli} používá pro určení velikosti bufferu šum v datech. Jak jsem již zmiňoval na začátku této kapitoly, v mých testovacích datech žádný šum není, proto je potřeba tuto definici nějak obejít. Jako řešení se nabízí vypočítat RMS a porovnat jednotlivé vzdálenosti bodů od roviny s touto průměrnou hodnotou. Body, jejichž vzdálenost je menší jak 2$\times$RMS, zahrneme do výsledného okolí. Body, které leží dále, z okolí zahodíme. 
 
@@ -637,7 +672,7 @@ Druhou problematickou částí procesu je postupné vybírání bodů z akumulá
 
 Řešení vůbec není jednoduché, nepodařilo se mi najít žádný způsob, kterým by šel tento problém detekovat a výrazně to nezhoršilo výkon algoritmu. Proto je nutné tento problém obejít a případně aspoň co nejvíce minimalizovat. Jedním ze způsobů, jak omezit výskyt takové situace, je nevybírat vrcholy z akumulátorového pole po jednom, ale vybírat všechny vrcholy najednou. Protože vybírání bodů z vrcholu je iterativní proces, implementace postupného vybírání všech vrcholů najednou je poměrně jednoduchá. Implementace bude taková, že budeme iterativně procházet jednotlivé vrcholy. V první iteraci vybereme z akumulátorového pole nejvyšší políčka ze všech vrcholů. V druhé iteraci rozšíříme vyhledávání v každém vrcholu o okolní buňky (viz Obr. \ref{fig:acc-pole-clus}). Proces je tedy téměř stejný, jako byl původně navržený, jen nevybíráme jeden vrchol po druhém, ale iterativně je vybíráme všechny najednou.
 
-Nyní máme navržený celý proces klastrování, tak podrobněji popíšeme implementaci. Vrcholy v poli jsme již nalezli a máme uložené souřadnice všech nejvyšších políček z vrcholů. Protože budeme přidávat body do všech segmentů najedou, budeme potřebovat nějakou datovou strukturu, která nám bude udržovat body ze segmentu, společně s dalšími informacemi. Vytvoříme tedy třídu $SegmentWrapper$, která bude obsahovat souřadnice vrcholu, všechny body, které do segmentu patří, dále bude ukládat aktuální RMS, průměrnou vzdálenost mezi body a booleovskou hodnotu, která bude určovat, zda je segment již uzavřený nebo jestli do něj ještě přidáváme body. Poté vytvoříme seznam instancí těchto objektů na základě počtu nalezených vrcholů v poli. Velikost seznamu bude odpovídat počtu nalezených vrcholů v akumulátorovém poli, každá instance bude inicializována body z nejvyšší buňky. Tyto body budou přidány do segmentu a odstraněny z akumulátorového pole.
+Nyní máme navržený celý proces klastrování, tak podrobněji popíšeme implementaci. Vrcholy v poli jsme již nalezli a máme uložené souřadnice všech nejvyšších políček z vrcholů. Protože budeme přidávat body do všech segmentů najedou, budeme potřebovat nějakou datovou strukturu, která nám bude udržovat body ze segmentu, společně s dalšími informacemi. Vytvoříme tedy třídu \verb|SegmentWrapper|, která bude obsahovat souřadnice vrcholu, všechny body, které do segmentu patří, dále bude ukládat aktuální RMS, průměrnou vzdálenost mezi body a booleovskou hodnotu, která bude určovat, zda je segment již uzavřený nebo jestli do něj ještě přidáváme body. Poté vytvoříme seznam instancí těchto objektů na základě počtu nalezených vrcholů v poli. Velikost seznamu bude odpovídat počtu nalezených vrcholů v akumulátorovém poli, každá instance bude inicializována body z nejvyšší buňky. Tyto body budou přidány do segmentu a odstraněny z akumulátorového pole.
 
 Výsledný segment bude velmi ovlivněn parametry, které se vypočítají z těchto iniciálních bodů (zejména RMS). Proto je vhodné tyto body nejprve zpracovat a zahodit body, které nejsou s ostatními v rovině (tedy nějaký šum, který se náhodně trefil do vrcholu v akumulátorovém poli). Tento proces implementujeme velmi podobně, jako při definici okolí bodu. Nejprve vezmeme všechny body a proložíme je rovinou. Tuto rovinu převážíme stejným způsobem, jako při definici okolí. Poté spočteme RMS a ze segmentu odebereme všechny body, které jsou od výsledné roviny dále, než 5$\times$RMS. Tyto body ale nezahodíme úplně, ale vrátíme je zpět do akumulátorového pole na jejich původní pozici. V tuto chvíli potřebujeme ošetřit situaci, kdy může více rovin splynout v jeden vrchol (situace je podrobně popsána na konci sekce \ref{sub:analyza-klastrovani}). Tento problém detekujeme tak, že opět přepočítáme RMS bodů v segmentu. Pokud je tato hodnota výrazně velká, body s největší pravděpodobností neleží v rovině. Velikost RMS porovnáme s velikostí koule definující okolí, kterou jsme vypočítali úplně na začátku algoritmu. Tato velikost bude vždy větší, než očekávané RMS u běžné roviny. Pokud tedy detekujeme problém, měli bychom ho řešit vytvořením nového akumulátorového pole a změnou pozice referenčních bodů podle rovnice \ref{eq:new-origins}. Tento postup je ale značně neefektivní, protože vyžaduje alokovat druhé akumulátorové pole stejné velikosti, jako to původní. Jednodušší postup je rekurzivně vytvořit novou instanci celého algoritmu a předat jí na vstupu pouze body způsobující problém. Nová instance je vrátí segmentované a tím jsme problém vyřešili. Akorát původní segment s více rovinami odstraníme ze seznamu a přidáme nově identifikované segmenty. Těmto segmentům nastavíme stejné souřadnice vrcholu a budeme do nich přidávat body stejným způsobem, jako do ostatních segmentů. Jediný problém, který při tomto procesu může teoreticky nastat je zacyklení v rekurzi. To vyřešíme tím, že nedovolíme algoritmu v rekurzi jít do větší hloubky. Taková situace je opravdu spíše jen teoretická, proto nemá smysl vymýšlet složitější řešení.
 
@@ -663,14 +698,115 @@ Konkrétní vliv těchto parametrů na výslednou segmentaci je popsán v násle
 
 \section{Struktura a použití zdrojového kódu}
 
+\lstset{
+	morekeywords={ArrayList,Point3D},
+	emph={[1]doClustering,doSegmentation,PlannarSegmentation,setPointcloud,getSegmentedPointCloud},
+	emph={[2]pointCloud,segmentedPointCloud,segmentation},
+	emphstyle={[1]\footnotesize\ttfamily\textbf},
+	emphstyle={[2]\color{ForestGreen}},
+}
+
 \subsection{Struktura zdrojového kódu}
 
-jaký soubory mám, co v nich je, jaký mám třídy a jaký maj metody\ldots
+Protože se jedná o implementaci jednoúčelových algoritmů, struktura použitých tříd je poměrně jednoduchá. Pro každý algoritmus je vytvořená samostatná třída umístěná v balíčku \verb|vicitis.tools| Dále jsem vytvořil dvě třídy, které implementují prokládání bodů rovinou pomocí metody nejmenších čtverců. Jde o třídy \verb|LeastSquare|, která implementuje základní verzi, a \verb|WeightedLeastSquare|, která implementuje váženou verzi metody nejmenších čtverců. Obě metodv balíčku \verb|vicitis.inner.methods|. Tyto třídy jsou oddělené od obou algoritmů pro lepší znovupoužitelnost v rámci celého systému. Obě třídy jsou na použití velmi jednoduché, obsahují jednu statickou metodu \verb|fitPlane|, která má na vstupu body a případně jejich váhy a vrací instanci třidy \verb|Plane3D|, tedy reprezentaci roviny.
+
+První algoritmus, segmentace na základě velikosti normálového vektoru, se nachází v třídě \verb|PlannarSegmentation|. Rozhraní třídy pro běžné používání je poměrně jednoduché. Obsahuje dvě jednoduché metody, pomocí kterých se třídě nastavuje vstupní mračno bodů, resp. získává výsledné segmentované mračno. Tyto metody jsou na ukázce \ref{code:seg-in-out}.
+
+\begin{lstlisting}[label=code:seg-in-out,caption={Metody pro nastavení vstupu a získání výstup algoritmu.}]
+/**
+ * Nastavuje pointcloud pro segmentaci
+ * @param pc vstupni pointcloud (mracno bodu)
+ */
+public void setPointcloud(ArrayList<Point3D> pc) {
+	this.pointCloud = pc;
+}
+
+/**
+ * Vraci segmentovany pointcloud
+ * @return segmentovany pointcloud
+ */
+public HashMap<Integer, ArrayList<Point3D>> getSegmentedPointCloud() {
+	return segmentedPointCloud;
+}
+\end{lstlisting}
+
+Pro použití samotného algoritmu třída obsahuje další dvě metody, viz ukázka \ref{code:seg-methods}. Jedna metoda slouží k uložení bodů do akumulátorového pole a druhá ke klastrování těchto bodů v akumulátorovém poli. Parametry, které jsou do těchto metod zadávané, jsou popsané v předchozí sekci \ref{sub:param}.
+
+\begin{lstlisting}[label={code:seg-methods},caption={Metody určené pro používání algoritmu.}]
+/**
+ * Pouze provede segmentaci do akumulatoroveho pole
+ * 
+ * @param pointPerSphere pocet bodu, ktere prumerne definuji velikost okoli bodu, zasadne ovlivnuje vysledky i rychlost algoritmu (cim mene bodu, tim rychlejsi)  doporuceno 20-200, obvykle 40-80
+ * @return akumulatorove pole, ktere obsahuje vsechny body ze vstupniho mracna
+ */
+public ArrayList<Point3D>[][] doSegmentation(int pointPerSphere) {
+	if(pointCloud == null)
+	    throw new NullPointerException("Neni nastaveno zadne vstupni mracno bodu.");
+	return this.doSegmentation(pointCloud, pointPerSphere);
+}
+
+/**
+ * Provadi klastrovani bodu v akumulatorovem poli
+ * 
+ * @param acc akumulatorove pole naplnene body
+ * @param minPeakCountRatio parametr, ktery urcuje "velikost" rovin. Cim vetsi, tim vice mensich mensich rovin by melo vstupni mracno mit. Hodnota priblizne odpovida poctu rovin
+ * @param quality kvalita clusteringu, cca 1 - 10,
+ * cim vic, tim vice segmentovanych bodu, ale delsi cas
+ */
+public void doClustering(ArrayList<Point3D>[][] acc, int minPeakCountRatio, int quality) {
+	if(acc == null)
+	    throw new NullPointerException("Akumulatorove pole je null.");
+	this.doClustering(acc, pointCloud.size(), minPeakCountRatio, quality);
+}
+\end{lstlisting}
+
+Tyto dvě public metody jsou delegovány na přetížené private metody, které již přímo implementují algoritmus. Součástí této třídy jsou ještě dvě vnitřní třídy, které jsou použity jako interní datové struktury využitelné jen v rámci tohoto algoritmu. První třídou je \verb|SegmentWrapper|, která slouží pro reprezentaci segmentu při klastrování bodů. Druhou vnitřní třídou je \verb|BitArray|, která slouží k reprezentaci bitového pole. Do toho pole se během klastrování bodů poznamenává, která políčka byla již projita. 
 
 \subsection{Ukázkové použití algoritmu}
 \label{sub:pouziti}
 
-nějakej zdroják z mainu a možnosti použití
+Jak bylo naznačeno v sekci \ref{sub:param}, jsou dvě základní možnosti, jak algoritmus používat. V ukázce použití uvedu tu složitější variantu, kdy se nejprve provede ukložení bodů do akumulátorového pole a poté je možné provést klastrování bodů vícekrát. Zdrojový kód této varianty je zobrazen v ukázce \ref{code:usage}. 
+
+\begin{lstlisting}[label={code:usage},caption={Ukázkové použití implementace algoritmu.}]
+//nacteme vstupni mracno
+ArrayList<Point3D> pc = new ArrayList<Point3D>();
+File[] files = new File("input/").listFiles();
+for(File f : files) {
+    pc.addAll(new PLYpcLoader(f, true).getPointCloud());
+}
+//instance segmentace
+PlannarSegmentation segmentation = new PlannarSegmentation();
+segmentation.setPointcloud(pc);
+//parametr urcujici velikost okoli
+int pps = getInput("Zadejte velikost okoli bodu (cca. 20-200): ");
+//ulozime body do akumulatrovoeho pole
+ArrayList<Point3D>[][] acc = segmentation.doSegmentation(pps);
+
+//klastrovani muzeme provadet vicekrat
+while(true) {
+	//klon akumulatoroveho pole
+	ArrayList<Point3D>[][] accClone = new ArrayList[acc.length][acc.length];
+	/* tady je potreba projit cele akumulatorove pole a 
+	 * naklonovat jednotliva policka, pro ukazku nepodstatne */
+	
+	//nastavime parametry pro klastrovani
+	int param = getInput("Zadejte hodnotu parametru pro klastrovani: ");
+	int qlt = getInput("Zadejte 'kvalitu' segmentu (cca 1-10): ");  
+	//muzeme vybirat segmenty postupne 
+	do {
+		segmentation.doClustering(accClone, param, qlt);
+		HashMap<Integer, ArrayList<Point3D>> spc = segmentation.getSegmentedPointCloud();
+		VRMLexporter.exportSegmentedPointClouds(spc,new File("out-iterace.wrl"));
+
+		param = getInput("Pokud chcete pokracovat v tomto clusteringu, "
+			+ "zadejte vyssi hodnotu parametru pro klastrovani, "
+			+ "(0 = konec klastrovani): ");
+		if(param == 0) break;
+	} while(true);
+}
+\end{lstlisting}
+
+Pro načtení uživatelského vstupu je zde použita metoda \verb|getInput|, které uživateli vypíše zadaný text a vrací jím zadaný parametr. Tato metoda není nikde implementována, to není účelem této ukázky, je zde jen pro ilustraci. Důležité je, že po zadání velikosti okolí se provede uložení mračna bodů do akumulátorového pole, viz řádek 13. Toto se provede za celý běh algoritmu pouze jednou.  Poté následuje cyklus, který nám umožňuje získané akumulátorové pole segmentovat vícekrát. To je zajištěno tak, že na začátku každého cyklu se vytvoří klon původního akumulátorového pole, které se vůbec nezpracovává, operace se provádí pouze nad klonovaným polem. Poté jsou od uživatele vyžádány zbylé dva parametry segmentace. Poté se provede klastrování bodů, viz řádek 28. Uloží se výsledek klastrování a poté uživatel dostane na výběr, jestli chce v tomto jednom klastrování pokračovat. Pokud ano, zadá vyšší parametr klastrování a to proběhne opět na zbylém akumulátorovém poli. V tomto kroku se vyberou další, menší roviny. Tento krok je možné opakovat, dokud jsou segmentované roviny dostatečně kvalitní. Po ukončení tohoto cyklu se proces vrací na začátek, kdy se naklonuje nové pole, a je možné provést klastrování znovu od začátku s jinými parametry.
 
 
 %*****************************************************************************
