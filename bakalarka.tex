@@ -633,6 +633,7 @@ Tímto máme první část algoritmu kompletně hotovou. Ve chvíli, kdy vypočt
 
 
 \subsection{Klastrování bodů v akumulátorovém poli}
+\label{sub:seg1-klastrovani}
 
 Tato část algoritmu se zabývá tím, jak v akumulátorovém poli správně identifikovat jednotlivé segmenty a jak je poté z pole vybrat. Teorie je taková, že každý segment vytvoří v akumulátorovém poli vrchol (viz Obr. \ref{fig:acc-pole}), který detekujeme a poté všechny body z takového vrcholu zahrneme do jednoho segmentu. Ačkoliv se to může zdát poměrně jednoduché, v praxi lze narazit na několik problémů. Jedním z takových problémů může být např. to, že každý vrchol je jinak vysoký a obsahuje jiný počet bodů, takže je nutné stanovit nějakou hranici, kdy vrchol ještě označíme za segment a kdy už bude jenom nějakým náhodným výsledkem šumu. Dalším problémem je situaci, kdy jsou dva vrcholy velmi blízko u sebe a nejde rozlišit, kde je mezi nimi hranice. V takovém případě musíme využít nějakou další znalost o bodech z objektového prostoru. Může nastat další podobný problém, kdy jsou dva vrcholy blízko u sebe a na první pohled nedokážeme určit, že se jedná o dva vrcholy a ne jen jeden. Problematická se poté ukáže i samotná definice vrcholu. V praxi může být jeden takový vrchol tvořen několika menšími vrcholy v těsné blízkosti. Musíme být tedy schopni rozlišit, kdy takové vrcholy tvoří jeden segment a kdy už ne. Toto jsou ve stručnosti hlavní problémy, kterými se budu v této kapitole zabývat.
 
@@ -816,6 +817,7 @@ Pro načtení uživatelského vstupu je zde použita metoda \verb|getInput|, kte
 
 Testování probíhalo algoritmu dvěma způsoby. Nejprve je nutné na nějakých \uv{jednoduchých} datech ověřit, zda algortimus funguje správně a chová se tak, jak očekáváme. Teprve poté může být algoritmus testován na reálných datech, kde se testuje jednak správnost výsledků a dále také výkon algoritmu. Testovat správnost segmentace však není úplně jednoduché, protože je složité nějak ohodnotit kvalitu segmentace. Jedním kritériem může být kompletnost - kolik bodů z celkového počtu všech bodů bylo zahrnuto do výsledných segmentů. Jenže v dodaných reálných datech je vždy poměrně velký počet bodů, které v žádných rovinách neleží a očekává se, že budou během segmentace zahozeny. Takže tato hodnota má jen omezenou vypovídající hodnotu. Jako další kritérium pro testování se nabízí počet výsledných segmentů. Tato hodnota se dá porovnat s očekávaným počtem segmentů v daném mračnu. Zároveň se však musí porovnat očekávané segmenty jednotlivě, tedy jestli nalezený segment odpovídá danému očekávanému segmentu. Testování bude postaveno na těchto dvou kritériích. Samozřejmě bude také testován výkon, zajímat nás bude zejména doba segmentace a spotřeba paměti za běhu algoritmu.
 
+\noindent
 Veškeré testování probíhalo v této konfiguraci:
 \begin{itemize}
  \item procesor: Intel Core 2 Duo T6670 2,20 GHz, 2MB L2 Cache, FSB 800 MHz
@@ -824,17 +826,71 @@ Veškeré testování probíhalo v této konfiguraci:
  \item Java: verze 1.6.0\_24, Java HotSpot VM 20.4-b02
 \end{itemize}
 
-
-
 \section{Ověření funkčnosti na umělých datech}
 
+Pro ověření funkčnosti jsem vytvořil jednoduchý generátor mračna bodů. Generátoru se zadá počet rovin, které chceme generovat, poté velikost těchto rovin a hustota bodů. Generátor vyvoří zadaný počet rovin v prostoru relativně blízko sebe, aby se některé roviny protínaly. Body v rámci roviny mají vždy nějakou malou dochylku, neleží přesně v rovině. Zdrojové kódy generátoru jsou na přiloženém CD, konkrétně se jedná o třídu \verb|PlaneGenerator| z balíčku \verb|vicitis.inner.segmentation.pointcloudSegmentation|. Stejně tak vstupní a výstupní mračna ze všech testů jsou k dispozici na přiloženém CD, viz seznam souborů v kapitole \ref{chap:CD}. 
 
+\subsection{Segmentace na základě velikosti normálového vektoru}
+
+Segmentování bylo provedeno za pomoci popsaného generátoru mračna bodů. Testoval se počet bodů, které byly z celkového počtu všech bodů segmentovány. Dalším kritériem byl počet bodů, které byly chybně přiřazeny do segmentu, do kterého nepatřily (nejčastěji body podél hran). Tato hodnota byla pouze řádově odhadnuta podle výsledků segmentace, není možné jednoduše určit přesnou hodnotu. Při této testovací segmentaci byla provedena celá segmentace najedou, parametr klastrování nebyl během segmentace upravován. Výsledky testování jsou uvedeny v tabulce \ref{table:test1-gen}.
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|r|r|r|r|r|r|r|r|r|r|r|}
+\hline
+\multicolumn{1}{|l|}{} & \multicolumn{ 3}{c|}{\textbf{parametry}} & \multicolumn{ 2}{c|}{\textbf{vstup}} & \multicolumn{ 5}{c|}{\textbf{výsledná segmentace}} \\ \hline
+\textbf{test} & \multicolumn{1}{c|}{\textbf{P1}} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \multicolumn{1}{c|}{\textbf{rovin}} & \multicolumn{1}{c|}{\textbf{bodů}} & \multicolumn{1}{c|}{\textbf{segmentů}} & \multicolumn{ 2}{c|}{\textbf{seg. bodů}} & \multicolumn{ 2}{c|}{\textbf{chyb. bodů}} \\ \hline
+\textbf{1-0} & 20 & 2 & 1 & 1 & 1800 & 1 & 1800 & 100,00\% & 0 & 0,00\% \\ \hline
+\textbf{1-1} & 20 & 2 & 1 & 1 & 1800 & 1 & 1800 & 100,00\% & 0 & 0,00\% \\ \hline
+\textbf{2-0} & 20 & 2 & 1 & 2 & 3600 & 2 & 3600 & 100,00\% & 0 & 0,00\% \\ \hline
+\textbf{2-1} & 20 & 2 & 10 & 2 & 3600 & 2 & 3589 & 99,69\% & 5 & 0,14\% \\ \hline
+\textbf{3-0} & 20 & 2 & 10 & 3 & 5400 & 3 & 5385 & 99,72\% & 15 & 0,28\% \\ \hline
+\textbf{3-1} & 20 & 2 & 10 & 3 & 5400 & 3 & 5383 & 99,69\% & 20 & 0,37\% \\ \hline
+\textbf{4-0} & 20 & 2 & 10 & 4 & 7200 & 4 & 7195 & 99,93\% & 20 & 0,28\% \\ \hline
+\textbf{4-1} & 20 & 4 & 10 & 4 & 7200 & 4 & 7153 & 99,35\% & 10 & 0,14\% \\ \hline
+\textbf{5-0} & 40 & 4 & 10 & 5 & 9000 & 5 & 8959 & 99,54\% & 10 & 0,11\% \\ \hline
+\textbf{5-1} & 40 & 4 & 10 & 5 & 9000 & 5 & 8992 & 99,91\% & 250 & 2,78\% \\ \hline
+\textbf{6-0} & 40 & 4 & 10 & 6 & 10800 & 6 & 10765 & 99,68\% & 30 & 0,28\% \\ \hline
+\textbf{6-1} & 40 & 4 & 10 & 6 & 10800 & 6 & 10724 & 99,30\% & 80 & 0,74\% \\ \hline
+\textbf{7-0} & 40 & 4 & 10 & 7 & 12600 & 7 & 12550 & 99,60\% & 250 & 1,98\% \\ \hline
+\textbf{7-1} & 40 & 4 & 10 & 7 & 12600 & 7 & 12563 & 99,71\% & 20 & 0,16\% \\ \hline
+\end{tabular}
+}
+\caption{Tabulka s výsledky testování algoritmu na generovaných datech. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastrování.} 
+\label{table:test1-gen}
+\end{table}
+
+Jak je z tabulky patrné, ve všech testech byly všechny roviny rozeznány a rozděleny do segmentů. Ve všech případech bylo segmentováno více jak 99\% vstupních bodů. Horší výsledky jsou však u chybných bodů. Ve dvou případech (měření 5-1 a 7-0) jsou tyto hodnoty řádově vyšší, než v ostatních případech. U těchto dvou testů nastal problém, kdy byly dva vrcholy v akumulátorovém poli blízko sebe a byl v první iteraci nalezen pouze jeden z nich. Při vybírání tohoto vrcholu byly vybrány i některé body z druhého vrcholu. Tento druhý vrchol byl poté nalezen až v druhé iteraci prohledávání pole a byl správně segmentován, nicméně již bez dříve odebraných bodů. Tento problém byl popsán v sekci \ref{sub:seg1-klastrovani} a znázorněn na obrázku \ref{fig:chyba-clustering}. Řešení tohoto problému se mi bohužel nalézt nepodařilo, ve zmiňované kapitole jsou pouze popsány kroky, které minimalizují vznik problému. Je nutné poznamenat, že v tomto typu generovaných dat vzniká problém výrazně častěji, než na reálných datech. Generovaná data totiž obsahují velké množství rovin na malém prostoru a mračna obsahují jen malý počet bodů. Akumulátorové pole je tedy poměrně malé a je větší šance, že vrcholy budou v poli blízko u sebe a zároveň budou tyto vrcholy reprezentovat roviny, které jsou velmi blízko v objektovém prostoru (to jsou podmínky, kdy tento problém nastává). Ukázka segmentace 7-0 je na obrázku \ref{fig:test-chyba-1}. Ve všech ukázkách segmentací v této kapitole jsou jednotlivé segmenty označeny barevně (každý segment má jinou barvu). Pokud jsou v ukázce černé body, tyto body nebyly přiřazeny do žádného segmentu.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-chyba-1}
+\caption{Ukázka testovací segmentace, která je v tabulce \ref{table:test1-gen} označna jako 7-0. Vlevo je zobrazena výsledná segmentace, vpravo je detail na popsanou chybu při segmentaci.}
+\label{fig:test-chyba-1}
+\end{center}
+\end{figure}
+
+Pro ilustraci přidávám ještě jednu ukázku testovací segmentace, na obrázku \ref{fig:test-6-0} je mračno označené v tabulce jako 6-0.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-6-0}
+\caption{Ukázka testovací segmentace, která je v tabulce \ref{table:test1-gen} označna jako 6-0. Jedná se o stejné mračno z různých úhlů.}
+\label{fig:test-6-0}
+\end{center}
+\end{figure}
+
+Vzhledem k tomu, že ve všech testovacích případech byly nalezeny všechny roviny, algoritmus rozhodně funguje správně. Zároveň ve všech případech bylo segmentováno více jak 99,3\% bodů. Ve většině případů byl počet špatně přiřazených bodů velmi malý, kromě dvou již zmiňovaných případů.
+
+\subsection{Segmentace pomocí vyhledávání dominantních os}
+
+lorem ipsum :)
+
+
+\newpage
 \section{Testování kvality algoritmů na reálných datech}
 
-\begin{itemize}
- \item Způsob, průběh a výsledky testování.
- \item Srovnání s existujícími řešeními, pokud jsou známy.
-\end{itemize} 
+
 
 
 %*****************************************************************************
