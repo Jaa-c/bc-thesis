@@ -943,7 +943,7 @@ Protože mračno obsahuje poměrně přesné roviny bez větších chyb a nerovn
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/test-dum2-seg}
-\caption{Ukázka mračna bodů bla bla bla.}
+\caption{Ukázka vybraných mračen bodů z testování. Obrázky odpovídají značení v tabulce: (a) d2-0.01, (b) d2-0.14, (c) d2-0.02, (d) d2-0.07.}
 \label{fig:test-dum2-seg}
 \end{center}
 \end{figure}
@@ -954,7 +954,28 @@ Celkově lze tedy říci, že algoritmus je poměrně robustní pro mračno s ma
 
 Za zmínku ještě stojí poměrně nízký počet segmentovaných bodů, který byl v nejlepším případě necelých 64\% bodů. To je dáno tím, že mračno obsahuje poměrně velký počet bodů, které v daných rovinách neleží (viz Obr. \ref{fig:dum-stodulky} (a)).
 
+Pro druhou ukázku vlivu parametrů na segmentaci použiji mračno stodůlky. Na tomto mračnu bude ukázáno, jaký vliv má parametr klastování na výslednou segmentaci. Výsledkky testování jsou uvedeny v tabulce \ref{table:test3-klastr}.
 
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{|r|r|r|r|r|r|}
+\hline
+\multicolumn{1}{|c|}{\textbf{test}} & \multicolumn{1}{c|}{\textbf{P1}} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \multicolumn{1}{c|}{\textbf{seg. bodů}} & \multicolumn{1}{c|}{\textbf{segmentů}} \\ \hline
+st-0.00 & 30 & 1 & 5 & 37,42\% & 3 \\ \hline
+st-0.01 & 30 & 3 & 5 & 55,24\% & 6 \\ \hline
+st-0.02 & 30 & 4 & 5 & 61,33\% & 8 \\ \hline
+st-0.03 & 30 & 5 & 5 & 62,51\% & 9 \\ \hline
+st-0.04 & 30 & 6/7 & 5 & 65,42\% & 11 \\ \hline
+st-0.05 & 30 & 8 & 5 & 66,10\% & 12 \\ \hline
+st-0.06 & 30 & 9/10 & 5 & 66,40\% & 13 \\ \hline
+st-0.07 & 30 & 11 & 5 & 66,50\% & 14 \\ \hline
+\end{tabular}
+\caption{Tabulka zobrazuje výsledky testování algoritmu na mračnu stodůly při různých parametrech klastrování. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastrování.} 
+\label{table:test3-klastr}
+\end{center}
+\end{table}
+
+Z tabulky je jasně vidět, že při zvyšování parametru klastrování postupně přibývá počet nalezených rovin.
 
 
 %*****************************************************************************
