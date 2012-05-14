@@ -45,9 +45,10 @@
  % \newcommand{\efig}{\end{center}\end{figure}}
  % umoznuje pouzit prikaz \bfig namisto \begin{figure}\begin{center} atd.
  
-  
- 
 %jaa
+
+\usepackage{float}
+
 \usepackage{listings}
 \usepackage{courier}
 \lstset{
@@ -815,7 +816,7 @@ Pro načtení uživatelského vstupu je zde použita metoda \verb|getInput|, kte
 \chapter{Testování}
 \label{chap:test}
 
-Testování probíhalo algoritmu dvěma způsoby. Nejprve je nutné na nějakých \uv{jednoduchých} datech ověřit, zda algortimus funguje správně a chová se tak, jak očekáváme. Teprve poté může být algoritmus testován na reálných datech, kde se testuje jednak správnost výsledků a dále také výkon algoritmu. Testovat správnost segmentace však není úplně jednoduché, protože je složité nějak ohodnotit kvalitu segmentace. Jedním kritériem může být kompletnost - kolik bodů z celkového počtu všech bodů bylo zahrnuto do výsledných segmentů. Jenže v dodaných reálných datech je vždy poměrně velký počet bodů, které v žádných rovinách neleží a očekává se, že budou během segmentace zahozeny. Takže tato hodnota má jen omezenou vypovídající hodnotu. Jako další kritérium pro testování se nabízí počet výsledných segmentů. Tato hodnota se dá porovnat s očekávaným počtem segmentů v daném mračnu. Zároveň se však musí porovnat očekávané segmenty jednotlivě, tedy jestli nalezený segment odpovídá danému očekávanému segmentu. Testování bude postaveno na těchto dvou kritériích. Samozřejmě bude také testován výkon, zajímat nás bude zejména doba segmentace a spotřeba paměti za běhu algoritmu.
+Testování algoritmu je provedeno dvěma způsoby. Nejprve je nutné na nějakých \uv{jednoduchých} datech ověřit, zda algortimus funguje správně a chová se tak, jak očekáváme. Teprve poté může být algoritmus testován na reálných datech, kde se testuje jednak správnost výsledků a dále také výkon algoritmu. Testovat správnost segmentace však není úplně jednoduché, protože je složité nějak ohodnotit kvalitu segmentace. Jedním kritériem může být kompletnost - kolik bodů z celkového počtu všech bodů bylo zahrnuto do výsledných segmentů. Jenže v dodaných reálných datech je vždy poměrně velký počet bodů, které v žádných rovinách neleží a očekává se, že budou během segmentace zahozeny. Takže tato hodnota má jen omezenou vypovídající hodnotu. Jako další kritérium pro testování se nabízí počet výsledných segmentů. Tato hodnota se dá porovnat s očekávaným počtem segmentů v daném mračnu. Zároveň se však musí porovnat očekávané segmenty jednotlivě, tedy jestli nalezený segment odpovídá danému očekávanému segmentu. Testování bude postaveno na těchto dvou kritériích. Samozřejmě bude také testován výkon, zajímat nás bude zejména doba segmentace a spotřeba paměti za běhu algoritmu.
 
 \noindent
 Veškeré testování probíhalo v této konfiguraci:
@@ -832,7 +833,7 @@ Pro ověření funkčnosti jsem vytvořil jednoduchý generátor mračna bodů. 
 
 \subsection{Segmentace na základě velikosti normálového vektoru}
 
-Segmentování bylo provedeno za pomoci popsaného generátoru mračna bodů. Testoval se počet bodů, které byly z celkového počtu všech bodů segmentovány. Dalším kritériem byl počet bodů, které byly chybně přiřazeny do segmentu, do kterého nepatřily (nejčastěji body podél hran). Tato hodnota byla pouze řádově odhadnuta podle výsledků segmentace, není možné jednoduše určit přesnou hodnotu. Při této testovací segmentaci byla provedena celá segmentace najedou, parametr klastrování nebyl během segmentace upravován. Výsledky testování jsou uvedeny v tabulce \ref{table:test1-gen}.
+Segmentování bylo provedeno za pomoci popsaného generátoru mračna bodů. Testoval se počet bodů, které byly z celkového počtu všech bodů segmentovány. V generovaných datech všechny body spadají do nějaké roviny, takže teoreticky by mohl algoritmus segmentovat vždy 100\% bodů. Dalším kritériem testování byl počet bodů, které byly chybně přiřazeny do segmentu, do kterého nepatřily (nejčastěji body podél hran). Tato hodnota byla pouze řádově odhadnuta podle výsledků segmentace, není možné jednoduše určit přesnou hodnotu. Při této testovací segmentaci byla provedena celá segmentace najedou, parametr klastrování nebyl během segmentace upravován. Výsledky testování jsou uvedeny v tabulce \ref{table:test1-gen}.
 
 \begin{table}[ht]
 \resizebox{\textwidth}{!} {
@@ -862,7 +863,7 @@ Segmentování bylo provedeno za pomoci popsaného generátoru mračna bodů. Te
 
 Jak je z tabulky patrné, ve všech testech byly všechny roviny rozeznány a rozděleny do segmentů. Ve všech případech bylo segmentováno více jak 99\% vstupních bodů. Horší výsledky jsou však u chybných bodů. Ve dvou případech (měření 5-1 a 7-0) jsou tyto hodnoty řádově vyšší, než v ostatních případech. U těchto dvou testů nastal problém, kdy byly dva vrcholy v akumulátorovém poli blízko sebe a byl v první iteraci nalezen pouze jeden z nich. Při vybírání tohoto vrcholu byly vybrány i některé body z druhého vrcholu. Tento druhý vrchol byl poté nalezen až v druhé iteraci prohledávání pole a byl správně segmentován, nicméně již bez dříve odebraných bodů. Tento problém byl popsán v sekci \ref{sub:seg1-klastrovani} a znázorněn na obrázku \ref{fig:chyba-clustering}. Řešení tohoto problému se mi bohužel nalézt nepodařilo, ve zmiňované kapitole jsou pouze popsány kroky, které minimalizují vznik problému. Je nutné poznamenat, že v tomto typu generovaných dat vzniká problém výrazně častěji, než na reálných datech. Generovaná data totiž obsahují velké množství rovin na malém prostoru a mračna obsahují jen malý počet bodů. Akumulátorové pole je tedy poměrně malé a je větší šance, že vrcholy budou v poli blízko u sebe a zároveň budou tyto vrcholy reprezentovat roviny, které jsou velmi blízko v objektovém prostoru (to jsou podmínky, kdy tento problém nastává). Ukázka segmentace 7-0 je na obrázku \ref{fig:test-chyba-1}. Ve všech ukázkách segmentací v této kapitole jsou jednotlivé segmenty označeny barevně (každý segment má jinou barvu). Pokud jsou v ukázce černé body, tyto body nebyly přiřazeny do žádného segmentu.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/test-chyba-1}
 \caption{Ukázka testovací segmentace, která je v tabulce \ref{table:test1-gen} označna jako 7-0. Vlevo je zobrazena výsledná segmentace, vpravo je detail na popsanou chybu při segmentaci.}
@@ -872,7 +873,7 @@ Jak je z tabulky patrné, ve všech testech byly všechny roviny rozeznány a ro
 
 Pro ilustraci přidávám ještě jednu ukázku testovací segmentace, na obrázku \ref{fig:test-6-0} je mračno označené v tabulce jako 6-0.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/test-6-0}
 \caption{Ukázka testovací segmentace, která je v tabulce \ref{table:test1-gen} označna jako 6-0. Jedná se o stejné mračno z různých úhlů.}
@@ -889,6 +890,69 @@ lorem ipsum :)
 
 \newpage
 \section{Testování kvality algoritmů na reálných datech}
+
+V této části jsou otestovány oba algoritmy na reálných mračnech bodů, které jsem měl k dispozici. Testován je jednak výkon algoritmů a dále také kvalita samotné segmentace. Všechna testovaná mračna jsou k dispozici na přiloženém CD, stejně tak CD obsahuje výsledky všech segmentací v této kapitole. Výsledky segmentace budou vždy shrnuté v tabulce, kde bude mít každý test unikátní označení. Soubory na CD budou pro přehlednost označeny stejně, takže vždy půjde jednoduše přiřadit soubor na CD k datům popisovaným v textu.
+
+\subsection{Segmentace na základě velikosti normálového vektoru}
+
+Během testování tohoto algoritmu bude nejprve na dvou různých mračnech bodů ukázáno, jaký vliv mají parametry segmentace na dobu a výstup segmentace. Poté bude porovnána segmentace jednoho mračna bodů při obou způsobech segmentování - jednak vybrání všech segmentů najednou a dále vybrání segmentů postupně. Dále pak budou v kapitole ukázány výsledky segmentace z dalších mračen bodů, zde už budou ukázány pouze výsledky s nelepšími parametry.
+
+\subsubsection{Vliv parametrů na výslednou segmentaci}
+
+Pro ukázku vlivu parametrů na výslednou segmentaci jsem vybral dvě různá mrančna (viz Obr. \ref{fig:dum-stodulky}). První mračno je označeno jako \uv{dům 2}, toto mračno je složeno z 723695 bodů a obsahuje 3 velké roviny. Oproti tomu druhé mračno \uv{stodůlky} obsahuje více jak 10 rovin a skládá se ze 604411 bodů. Obě mračna reprezentují část budovy, ale zároveň obsahují poměrně velké množství bodů, které do žádné roviny nepatří.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/dum2-stodulky}
+\caption{Ukázka mračna bodů dům 2 (a) a stodůlky (b).}
+\label{fig:dum-stodulky}
+\end{center}
+\end{figure}
+
+Cílem tohoto testu je ukázat, jak jednotlivé parametry ovlivňují výslednou segmentaci. Cílem tedy není docílit co nejlepší segmentace, toho se bude týkat až další část testování. Nejprve bude testováno mračno dům 2. Tabulka \ref{table:test2-param-d2} ukazuje výsledky testování mračna. Na obrázku \ref{fig:test-dum2-seg} jsou zobrazeny některé z výsledků tohoto testování.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|r|r|r|r|r|r|}
+\hline
+\multicolumn{1}{|c|}{test} & \multicolumn{1}{c|}{P1} & \multicolumn{1}{c|}{P2} & \multicolumn{1}{c|}{P3} & \multicolumn{1}{c|}{seg. bodů} & \multicolumn{1}{c|}{segmentů} \\ \hline
+d2-0.00 & 10 & 1 & 1 & 25,68\% & 1 \\ \hline
+d2-0.01 & 10 & 1 & 10 & 31,37\% & 1 \\ \hline
+d2-0.02 & 10 & 2 & 1 & 54,53\% & 3 \\ \hline
+d2-0.03 & 10 & 2 & 2 & 56,65\% & 3 \\ \hline
+d2-0.04 & 10 & 2 & 3 & 60,09\% & 3 \\ \hline
+d2-0.05 & 10 & 2 & 5 & 63,00\% & 3 \\ \hline
+d2-0.06 & 10 & 2 & 10 & 63,36\% & 3 \\ \hline
+d2-0.07 & 10 & 2 & 20 & 63,79\% & 3 \\ \hline
+d2-0.08 & 10 & 3 & 1 & 53,75\% & 3 \\ \hline
+d2-0.09 & 10 & 4 & 1 & 53,71\% & 3 \\ \hline
+d2-0.10 & 10 & 5 & 1 & 53,75\% & 3 \\ \hline
+d2-0.11 & 10 & 10 & 1 & 57,00\% & 4 \\ \hline
+d2-0.12 & 20 & 2 & 1 & 54,79\% & 3 \\ \hline
+d2-0.13 & 40 & 2 & 1 & 56,91\% & 3 \\ \hline
+d2-0.14 & 80 & 2 & 1 & 61,12\% & 4 \\ \hline
+d2-0.15 & 120 & 2 & 1 & 54,38\% & 4 \\ \hline
+\end{tabular}
+\caption{Tabulka zobrazuje výsledky testování algoritmu na mračnu dům 2 při různých parametrech. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastrování.} 
+\label{table:test2-param-d2}
+\end{center}
+\end{table}
+
+Protože mračno obsahuje poměrně přesné roviny bez větších chyb a nerovností, pro testování stačilo i velmi malé okolí, segmentace fungovala správně již při okolí 10 bodů. Z tabulky by mělo být patrné, že pokud byl zadán parametr pro klastrování 1, byla tato hodnota příliš nízká a byl rozpoznán pouze jeden segment. Nicméně při zvýšení této hodnoty na 2 byly nalezeny již všechny tři očekávané segmenty. Při této hodnotě jsem dále měnil parametr určující kvalitu klastrování. Podle očekávání při zvýšení tohoto parametru narůstal počet bodů obsažených v segmentech. Při zvýšení parametru z 1 na 20 bylo  segmentováno o 9\% bodů více. Jak je ale z tabulky patrné, největší nárůst přidaných bodů byl při postupném zvyšování parametru od 1 do 5, následné zvyšování parametru již nemělo na segmentaci výrazný vliv. Pro běžné podmínky tedy nemá smysl tento parametr nastavovat na vyšší hodnotu než 10. V dalších testech byl zvyšován parametr klastrování (jde o data označená d2-0.8 - d2-0.11). Z tabulky je patrné, že se při počátečním zvyšování parametru výsledná segmentace výrazně neměnila. To je logické, protože při zvyšování parametru se snižovala hranice pro vyhledávání vrcholů v akumulátorovém poli, ale protože body ze tří velkých rovin vytvořily tři vysoké vrcholy, byly nalezeny stejně při všech těchto hodnotách parametru. Až při hodnotě 10 byl práh při prohledávání pole tak nízko, že našel nějaká zbytková data tvořící rovinu. Tato situace bude popsána v následujícím odstavci.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-dum2-seg}
+\caption{Ukázka mračna bodů bla bla bla.}
+\label{fig:test-dum2-seg}
+\end{center}
+\end{figure}
+
+V posledních 4 řádcích tabulky byla postupně zvyšována velikost okolí. Zvýšení na 20 a 40 bodů nemělo na segmentaci žádný výrazný vliv, segmentace byla jen o málo přesnější, což se projevilo ve zvýšném počtu segmentovaných bodů o několik procent. Při dalším zvyšování velikosti okolí však bylo nalezeno více segmentů, než se očekávalo. Toto je paradoxně způsobeno tím, že parametry bodů byly při větším okolí vypočteny přesněji. Konkrétní problém je v tom, že body tvořící nejvyšší buňku vrcholu jsou velmi přesně v rovině. Na základě těchto bodů je vypočteno RMS, které v následném klastrování určuje \uv{tloušťku} roviny, tedy přesněji vzdálenost, v jaké může bod od roviny být, aby byl ještě do segmentu zahrnut. Pokud je ale toto RMS malé (protože původní body byly  velmi přesně v rovině), jsou vybrány pouze ty nejpřesnější body. To má za následek, že v akumulátorovém poli zbydou body, které tvoří rovinu, akorát méně přesnou. Bodů je však stále ještě tolik, aby vytvořily v akumulátorovém poli vrchol. Tím pádem jsou v další iteraci prohledávání akumulátorového pole detekovány a je z nich vytvořen nový segment. Výsledkem je tedy to, že z jedné roviny jsou vytvořeny dva segmenty. První segment obsahuje nejpřesnější body z této roviny, druhý obsahuje zbylé, méně přesné body. Tento problém se při klsatrování velmi těžko detekuje. Je založen na faktu, že vypočtené RMS je malé. Nicméně v rámci algoritmu neexistuje žádná referenční hodnota, podle které by šlo rozhodnotou, že RMS je malé. Proto se mi tento problém nepodařilo detekovat během klastrování. Řešením by mohla být dodatečná detekce po klastrování, kdy by se zjišťovalo, zda jednotlivé segmenty nereprezentují stejnou rovinu. Řešení ani detekce tohoto problému nejsou v této práci implementovány. Řešení musí být případně navrhnuto až na základě výsledné segmentace (nabízí se sloučení segmentů ležících v jedné rovině). Případně se zde nabízí prostor pro navázání na tuto práci.
+
+Celkově lze tedy říci, že algoritmus je poměrně robustní pro mračno s malým počtem velkých rovin. Není výrazně závislý na zadané velikosti okolí, až při větších okolí nastává výše popsaný problém. Zároveň není algoritmus příliš závislý na parametru klastrování, fungoval správně od hodnoty 2 do hodnoty 10. Při této hodnotě však již byl nalezen jeden segment navíc. I v tomto případě byly 2 segmenty součástí jedné roviny jako ve výše popsané situaci. Příčina zde ale byla trochu jiná. Protože kvalita segmentů byla nastavena na 1, po vybrání 3 největších segmentů stále v akumulátorovém poli zbyly zbytky těchto rovin, které nebyly segmentovány. A protože byl parametr klastrování nastaven na 10, práh pro prohledávání pole byl tak nízký, že tyto zbytky byly detekovány jako segment. Řšešním této situace je snížit parametr klastrování nebo zvýšit kvalitu klastrování. 
+
+Za zmínku ještě stojí poměrně nízký počet segmentovaných bodů, který byl v nejlepším případě necelých 64\% bodů. To je dáno tím, že mračno obsahuje poměrně velký počet bodů, které v daných rovinách neleží (viz Obr. \ref{fig:dum-stodulky} (a)).
 
 
 
