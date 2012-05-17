@@ -975,7 +975,58 @@ st-0.07 & 30 & 11 & 5 & 66,50\% & 14 \\ \hline
 \end{center}
 \end{table}
 
-Z tabulky je jasně vidět, že při zvyšování parametru klastrování postupně přibývá počet nalezených rovin.
+Z tabulky je jasně vidět, že při zvyšování parametru klastrování postupně přibývá počet nalezených segmentů. Nejprve jsou nalezeny segmenty s největším počtem bodů, případně segmenty s body, které jsou velmi přesně v rovině. Při zvyšování jsou postupně nacházeny menší nebo méně kvalitní roviny. v tabulce můžeme vidět, že při zvyšování parametru až na hodnotu 8 jsou nacházeny segmenty, které řádově přidávají aspoň procenta bodů z celkového mračna. Při dalším zvyšování už jsou nalezeny pouze velmi malé segmenty, dá se tedy očekávat, že při vyšší hodnotě parametru jak 8 už nebudou nalezeny žádné významné segmenty ale pouze již nějaké velmi malé segmenty, případně budou chybně segmentovány zbytky již nalezených segmentů, jak bylo popsáno dříve v tééto kapitole. Na obrázku \ref{fig:test-stodulky-seg} jsou zobrazeny ukázky některých testovacích segmentací.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-stodulky-seg}
+\caption{Ukázka vybraných mračen bodů z testování z různých pohledů. Obrázky odpovídají značení v tabulce: (a) st-0.01, (b) st-0.02, (c) st-0.03, (d) st-0.06.}
+\label{fig:test-stodulky-seg}
+\end{center}
+\end{figure}
+
+Z obrázků je patrné, že algoritmus nedetekoval dvě střechy, které jsou rovinné a obsahují poměrně velké množství bodů (viz Obr. \ref{fig:dum-stodulky}). Tento problém nastal proto, že na velkém měřítků střechy vypadají rovně, ale jejich povrch je ve skutečnosti hodně hrbolatý, na malém měřítku tedy není dostatečně rovný. Parametry jednotlivých bodů na střeše jsou tím pádem poměrně rozdílné a body ze střechy nevytvoří v akumulátorovém poli dostatečně výrazný vrchol. Aby byl algoritmus schopen střechy detekovat, je potřeba použít výrazně větší okolí, než 30 bodů, které bylo použito v tomto testu. Nicméně jak jsem zmiňoval na začátku této sekce, cílem těchto dvou testů bylo ukázat, jak parametry ovlivňují segmentaci, nikoliv získat při segmentaci co nejlepší výsledky. Na to dojde v pozdější části této kapitoly.
+
+\subsubsection{Testování časové a paměťové složitosti algoritmu}
+
+Protože je algoritmus poměrně komplikovaný a používá složitější datové struktury, nejde příliš jednoduše odhadnou asymptotickou složitost algoritmu. Proto jsem pouze měřil paměť za běhu programu a dobu běhu programu. Pro sledování alokované paměti jsem použil program VisualVM verze 1.3.4. Nejprve jsem testoval  segmentaci mračna bodů dům 2 (723695 bodů) s velikostí okolí 80 bodů, parametrem klastrování 1 a kvalitou klastrování 10. Výsledky měření jsou zachyceny v grafu na obrázku \ref{fig:memory-graph-all}.
+
+\begin{figure}[t!]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/memory-graph-all}
+\caption{Graf zobrazující velikost využité paměti za běhu algoritmu.}
+\label{fig:memory-graph-all}
+\end{center}
+\end{figure}
+
+Graf zobrazuje velikost alokované haldy a její reálné využití za běhu aplikace. Detail začátku grafu s popisem je zobrazen na obrázku \ref{fig:memory-graf1}. Graf je ovšem z jiného měření při stejných datech, takže se jeho hodnoty mohou nepatrně lišit. 
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/memory-graf1}
+\caption{Graf zobrazující velikost využité paměti při inicializaci algoritmu.}
+\label{fig:memory-graf1}
+\end{center}
+\end{figure}
+
+Důležité hodnoty v prvním grafu jsou v čase 1:30, kdy začal výpočet parametrů a dále čas 6:50, kdy začalo vybírání bodů z akumulátorového pole. To skončilo v čase 12:30, poté byl vyexportován výstup a v čase 13:00 byl algoritmus ukončen. Protože se během výpočtu parametrů bodů a při vybírání bodů z akumulátorového pole používá velké množství krátkodobých instancí, je výsledný graf velmi ovlivněn chováním garbage collectoru. Proto jsem provedl druhé měření, kdy jsem před každým odečítáním paměťi explicitně volal garbage collector - to tedy odpovídá hodnotě paměti, kterou zabírají \uv{živé} instance. Toto měření je v grafu zakreslené červenou křivkou. Protože šlo o dvě různá měření, grafy se mohou na ose x vzájemně lišit, nicméně maximálně o několik vteřin.
+
+Z grafů by mělo být patrné, že velikost potřebné paměti je nejvíce závislá na množství vstupních dat, algoritmus poté potřebuje další paměť na vytvoření kd-stromu a alokaci akumulátorového pole, ale dále za běhu již nealokuje žádné výrazné množství paměti. Na paměťových nárocích by se tedy neměly výrazně projevit ani použité parametry. Na obrázku \ref{fig:memory-graf2} je graf, který zobrazuje využitou paměť při segmentaci mračna stodůlky s různými parametry. Před každým odebraným vzorkem paměti byl volán garbage collector. První test zobrazuje segmentaci s velikosí okolí 20, parametrem klastrování 8 a kvalitou klastrování 1, druhý test je proveden s parametry 80, 8 a 10. Z grafu je patrné, že alokovaná paměť je v obou případech stejná. Pokles paměti v prostřední čísti grafu odpovídá ukončení ukládání bodů do akumulátorového pole a začátku vybírání segmentů.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/memory-graf2}
+\caption{Graf zobrazující velikost využité paměti při spuštění algoritmu s různými parametry.}
+\label{fig:memory-graf2}
+\end{center}
+\end{figure}
+
+Z grafu je také jasně vidět, že hodnota parametrů ovlivňuje zejména dobu běhu algoritmu. To však není žádné překvapení, důvody jsou popsané v kapitole \ref{chap:implementace}. Následující testování se tedy bude věnovat měření doby běhu algoritmu při různých vstupních parametrech. Zajímavé bude také srovnání, jaká část z celkové doby běhu algoritmu odpovídá vyhledávání okolí v kd-stromu a počítání SVD dekompozici při prokládání roviny množinou bodů.
+
+
+
+\subsubsection{Výsledky segmentace dodaných dat}
+
 
 
 %*****************************************************************************
