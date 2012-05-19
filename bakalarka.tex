@@ -1021,12 +1021,55 @@ Z grafů by mělo být patrné, že velikost potřebné paměti je nejvíce záv
 \end{center}
 \end{figure}
 
-Z grafu je také jasně vidět, že hodnota parametrů ovlivňuje zejména dobu běhu algoritmu. To však není žádné překvapení, důvody jsou popsané v kapitole \ref{chap:implementace}. Následující testování se tedy bude věnovat měření doby běhu algoritmu při různých vstupních parametrech. Zajímavé bude také srovnání, jaká část z celkové doby běhu algoritmu odpovídá vyhledávání okolí v kd-stromu a počítání SVD dekompozici při prokládání roviny množinou bodů.
+Z grafu je také jasně vidět, že hodnota parametrů ovlivňuje zejména dobu běhu algoritmu. To však není žádné překvapení, důvody jsou popsané v kapitole \ref{chap:implementace}. Následující testování se tedy bude věnovat měření doby běhu algoritmu při různých vstupních parametrech. Zajímavé bude také srovnání, jaká část z celkové doby běhu algoritmu odpovídá vyhledávání okolí v kd-stromu a počítání SVD dekompozice při prokládání roviny množinou bodů. Testování proběhlo pouze na mračnu stodůlky. Výsledky testování rychlosti algoritmu jsou shrnuty v tabulce \ref{table:test-cas}.
 
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|r|r|r|r|r|r|r|r|r|r|r|r|r|}
+\hline
+\multicolumn{1}{|l|}{} & \multicolumn{ 3}{c|}{\textbf{Parametry}} & \multicolumn{ 9}{c|}{\textbf{Čas [sec]}} \\ \hline
+\multicolumn{1}{|c|}{\textbf{test}} & \multicolumn{1}{c|}{\textbf{P1}} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \multicolumn{1}{c|}{\textbf{celkem}} & \multicolumn{ 2}{c|}{\textbf{ukládání do aku.}} & \multicolumn{ 2}{c|}{\textbf{vybírání z aku.}} & \multicolumn{ 2}{c|}{\textbf{kd-strom}} & \multicolumn{ 2}{c|}{\textbf{SVD}} \\ \hline
+\textbf{1} & 10 & 8 & 1 & 64,34 & 55,48 & 86,24\% & 8,21 & 12,76\% & 12,82 & 19,93\% & 17,76 & 27,60\% \\ \hline
+\textbf{2} & 10 & 8 & 2 & 66,97 & 55,48 & 82,85\% & 10,84 & 16,18\% & 12,82 & 19,15\% & 17,82 & 26,61\% \\ \hline
+\textbf{3} & 10 & 8 & 3 & 73,48 & 55,48 & 75,51\% & 18,00 & 24,49\% & 12,82 & 17,45\% & 17,90 & 24,36\% \\ \hline
+\textbf{4} & 10 & 8 & 5 & 85,70 & 55,48 & 64,74\% & 30,22 & 35,26\% & 12,82 & 14,96\% & 17,91 & 20,90\% \\ \hline
+\textbf{5} & 10 & 8 & 8 & 107,66 & 55,48 & 51,54\% & 52,17 & 48,46\% & 12,82 & 11,91\% & 17,92 & 16,64\% \\ \hline
+\textbf{6} & 10 & 8 & 10 & 115,26 & 55,48 & 48,14\% & 59,78 & 51,86\% & 12,82 & 11,12\% & 17,93 & 15,56\% \\ \hline
+\textbf{7} & 10 & 8 & 20 & 173,47 & 55,48 & 31,99\% & 117,98 & 68,01\% & 12,82 & 7,39\% & 17,94 & 10,34\% \\ \hline
+\textbf{8} & 20 & 8 & 5 & 93,84 & 71,50 & 76,19\% & 22,34 & 23,81\% & 18,07 & 19,26\% & 23,58 & 25,13\% \\ \hline
+\textbf{9} & 30 & 8 & 5 & 123,38 & 86,55 & 70,15\% & 36,83 & 29,85\% & 23,78 & 19,27\% & 26,42 & 21,41\% \\ \hline
+\textbf{10} & 50 & 8 & 5 & 172,05 & 119,14 & 69,25\% & 52,91 & 30,75\% & 34,93 & 20,30\% & 37,08 & 21,55\% \\ \hline
+\textbf{11} & 80 & 8 & 5 & 225,54 & 172,19 & 76,34\% & 53,35 & 23,66\% & 54,56 & 24,19\% & 49,84 & 22,10\% \\ \hline
+\textbf{12} & 100 & 8 & 5 & 281,07 & 224,82 & 79,99\% & 56,24 & 20,01\% & 71,51 & 25,44\% & 72,01 & 25,62\% \\ \hline
+\textbf{13} & 40 & 1 & 5 & 109,90 & 102,05 & 92,86\% & 7,85 & 7,69\% & 28,53 & 27,96\% & 31,17 & 30,54\% \\ \hline
+\textbf{14} & 40 & 2 & 5 & 128,48 & 102,05 & 79,43\% & 26,43 & 20,57\% & 28,53 & 22,21\% & 31,19 & 24,27\% \\ \hline
+\textbf{15} & 40 & 3 & 5 & 127,64 & 102,05 & 79,95\% & 25,59 & 20,05\% & 28,53 & 22,35\% & 31,21 & 24,45\% \\ \hline
+\textbf{16} & 40 & 4 & 5 & 131,66 & 102,05 & 77,51\% & 29,62 & 22,49\% & 28,53 & 21,67\% & 32,36 & 24,58\% \\ \hline
+\textbf{17} & 40 & 6 & 5 & 134,90 & 102,05 & 75,65\% & 32,85 & 24,35\% & 28,53 & 21,15\% & 33,35 & 24,72\% \\ \hline
+\textbf{18} & 40 & 8 & 5 & 138,28 & 102,05 & 73,80\% & 36,23 & 26,20\% & 28,53 & 20,63\% & 33,37 & 24,13\% \\ \hline
+\end{tabular}
+}
+\caption{Tabulka zobrazuje výsledky testování rychlosti algoritmu v závislosti na zadaných parametrech. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastroání.} 
+\label{table:test-cas}
+\end{table}
+
+
+Některá data z grafu jsou zachycena v grafu na obrázku \ref{fig:graf-test-cas}, konkrétně je v grafu znázorněn celkový čas segmentace a zároveň část, kterou zabralo ukládání bodů do akumulátorového pole a poté klastrování bodů v poli. Prvních 7 řádků v tabulce (tedy prvních 6 sloupců v grafu) zobrazuje změnu doby běhu algoritmu při zvyšování kvality klastrování. Jak se dá očekávat, zvýšení parametru zvyšuje dobu trvání klastrování bodů v poli. Ukládání do pole není ovlivněno vůbec (bylo provedenou pouze jednou, proto jsou u všech měření hodnoty totožné). V následujících 5ti měřeních je zvyšována velikost okolí bodu při. Opět se podle očekávání zvyšuje doba běhu se zvětšováním okolí. Doba klastrování se liší jen podle toho, jaká byla kvalita nalezeno segmentů. V posledních 6ti měřeních je měněn parametr klastrování. Z naměřených dat je zřetelné, že tento parametr nemá na dobu běhu zásadní vliv. Mění se pouze doba klastrování bodů v akumulátorovém poli, která je závislá na počtu nalezených segmentů \footnote{Tato hodnota zde není uvedena, ale je totožná s daty uvedenými v tabulce \ref{table:test3-klastr}}.
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/graf-test-cas}
+\caption{Graf zobrazující dobu běhu algoritmu v závislosti na zadaných parametrech. V grafu jsou znázorněna data z tabulky \ref{table:test-cas}.}
+\label{fig:graf-test-cas}
+\end{center}
+\end{figure}
 
 
 \subsubsection{Výsledky segmentace dodaných dat}
 
+V této části budou ukázány nejlepší výsledky segmentace všech dodaných testovacích mračen bodů. U každé segmentace bude uvedeno, při jakých parametrech byla segmentace provedena, kolik bodů bylo segmentováno a jak dlouho segmentace trvala. 
+
+Prvním testovaným mračnem je dům 2. Vstupní mračno je zobrazeno na obrázku \ref{fig:dum-stodulky}.
 
 
 %*****************************************************************************
