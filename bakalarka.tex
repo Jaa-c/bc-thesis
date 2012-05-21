@@ -893,11 +893,9 @@ lorem ipsum :)
 
 V této části jsou otestovány oba algoritmy na reálných mračnech bodů, které jsem měl k dispozici. Testován je jednak výkon algoritmů a dále také kvalita samotné segmentace. Všechna testovaná mračna jsou k dispozici na přiloženém CD, stejně tak CD obsahuje výsledky všech segmentací v této kapitole. Výsledky segmentace budou vždy shrnuté v tabulce, kde bude mít každý test unikátní označení. Soubory na CD budou pro přehlednost označeny stejně, takže vždy půjde jednoduše přiřadit soubor na CD k datům popisovaným v textu.
 
-\subsection{Segmentace na základě velikosti normálového vektoru}
+Během testování algoritmu bude nejprve na dvou různých mračnech bodů ukázáno, jaký vliv mají parametry segmentace na dobu a výstup segmentace. Poté bude porovnána segmentace jednoho mračna bodů při obou způsobech segmentování - jednak vybrání všech segmentů najednou a dále vybrání segmentů postupně. Dále pak budou v kapitole ukázány výsledky segmentace z dalších mračen bodů, zde už budou ukázány pouze výsledky s nelepšími parametry.
 
-Během testování tohoto algoritmu bude nejprve na dvou různých mračnech bodů ukázáno, jaký vliv mají parametry segmentace na dobu a výstup segmentace. Poté bude porovnána segmentace jednoho mračna bodů při obou způsobech segmentování - jednak vybrání všech segmentů najednou a dále vybrání segmentů postupně. Dále pak budou v kapitole ukázány výsledky segmentace z dalších mračen bodů, zde už budou ukázány pouze výsledky s nelepšími parametry.
-
-\subsubsection{Vliv parametrů na výslednou segmentaci}
+\subsection{Vliv parametrů na výslednou segmentaci}
 
 Pro ukázku vlivu parametrů na výslednou segmentaci jsem vybral dvě různá mrančna (viz Obr. \ref{fig:dum-stodulky}). První mračno je označeno jako \uv{dům 2}, toto mračno je složeno z 723695 bodů a obsahuje 3 velké roviny. Oproti tomu druhé mračno \uv{stodůlky} obsahuje více jak 10 rovin a skládá se ze 604411 bodů. Obě mračna reprezentují část budovy, ale zároveň obsahují poměrně velké množství bodů, které do žádné roviny nepatří.
 
@@ -987,7 +985,7 @@ Z tabulky je jasně vidět, že při zvyšování parametru klastrování postup
 
 Z obrázků je patrné, že algoritmus nedetekoval dvě střechy, které jsou rovinné a obsahují poměrně velké množství bodů (viz Obr. \ref{fig:dum-stodulky}). Tento problém nastal proto, že na velkém měřítků střechy vypadají rovně, ale jejich povrch je ve skutečnosti hodně hrbolatý, na malém měřítku tedy není dostatečně rovný. Parametry jednotlivých bodů na střeše jsou tím pádem poměrně rozdílné a body ze střechy nevytvoří v akumulátorovém poli dostatečně výrazný vrchol. Aby byl algoritmus schopen střechy detekovat, je potřeba použít výrazně větší okolí, než 30 bodů, které bylo použito v tomto testu. Nicméně jak jsem zmiňoval na začátku této sekce, cílem těchto dvou testů bylo ukázat, jak parametry ovlivňují segmentaci, nikoliv získat při segmentaci co nejlepší výsledky. Na to dojde v pozdější části této kapitoly.
 
-\subsubsection{Testování časové a paměťové složitosti algoritmu}
+\subsection{Testování časové a paměťové složitosti algoritmu}
 
 Protože je algoritmus poměrně komplikovaný a používá složitější datové struktury, nejde příliš jednoduše odhadnou asymptotickou složitost algoritmu. Proto jsem pouze měřil paměť za běhu programu a dobu běhu programu. Pro sledování alokované paměti jsem použil program VisualVM verze 1.3.4. Nejprve jsem testoval  segmentaci mračna bodů dům 2 (723695 bodů) s velikostí okolí 80 bodů, parametrem klastrování 1 a kvalitou klastrování 10. Výsledky měření jsou zachyceny v grafu na obrázku \ref{fig:memory-graph-all}.
 
@@ -1053,10 +1051,7 @@ Z grafu je také jasně vidět, že hodnota parametrů ovlivňuje zejména dobu 
 \label{table:test-cas}
 \end{table}
 
-
-Některá data z grafu jsou zachycena v grafu na obrázku \ref{fig:graf-test-cas}, konkrétně je v grafu znázorněn celkový čas segmentace a zároveň část, kterou zabralo ukládání bodů do akumulátorového pole a poté klastrování bodů v poli. Prvních 7 řádků v tabulce (tedy prvních 6 sloupců v grafu) zobrazuje změnu doby běhu algoritmu při zvyšování kvality klastrování. Jak se dá očekávat, zvýšení parametru zvyšuje dobu trvání klastrování bodů v poli. Ukládání do pole není ovlivněno vůbec (bylo provedenou pouze jednou, proto jsou u všech měření hodnoty totožné). V následujících 5ti měřeních je zvyšována velikost okolí bodu při. Opět se podle očekávání zvyšuje doba běhu se zvětšováním okolí. Doba klastrování se liší jen podle toho, jaká byla kvalita nalezeno segmentů. V posledních 6ti měřeních je měněn parametr klastrování. Z naměřených dat je zřetelné, že tento parametr nemá na dobu běhu zásadní vliv. Mění se pouze doba klastrování bodů v akumulátorovém poli, která je závislá na počtu nalezených segmentů \footnote{Tato hodnota zde není uvedena, ale je totožná s daty uvedenými v tabulce \ref{table:test3-klastr}}.
-
-\begin{figure}[ht]
+\begin{figure}[H]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/graf-test-cas}
 \caption{Graf zobrazující dobu běhu algoritmu v závislosti na zadaných parametrech. V grafu jsou znázorněna data z tabulky \ref{table:test-cas}.}
@@ -1064,12 +1059,99 @@ Některá data z grafu jsou zachycena v grafu na obrázku \ref{fig:graf-test-cas
 \end{center}
 \end{figure}
 
+Některá data z tabulky jsou zachycena v grafu na obrázku \ref{fig:graf-test-cas}, konkrétně je v grafu znázorněn celkový čas segmentace a zároveň část, kterou zabralo ukládání bodů do akumulátorového pole a poté klastrování bodů v poli. Prvních 7 řádků v tabulce (tedy prvních 6 sloupců v grafu) zobrazuje změnu doby běhu algoritmu při zvyšování kvality klastrování. Jak se dá očekávat, zvýšení parametru zvyšuje dobu trvání klastrování bodů v poli. Ukládání do pole není ovlivněno vůbec (bylo provedenou pouze jednou, proto jsou u všech měření hodnoty totožné). V následujících 5ti měřeních je zvyšována velikost okolí bodu při. Opět se podle očekávání zvyšuje doba běhu se zvětšováním okolí. Doba klastrování se liší jen podle toho, jaká byla kvalita nalezeno segmentů. V posledních 6ti měřeních je měněn parametr klastrování. Z naměřených dat je zřetelné, že tento parametr nemá na dobu běhu zásadní vliv. Mění se pouze doba klastrování bodů v akumulátorovém poli, která je závislá na počtu nalezených segmentů \footnote{Tato hodnota zde není uvedena, ale je totožná s daty uvedenými v tabulce \ref{table:test3-klastr}}.
 
-\subsubsection{Výsledky segmentace dodaných dat}
 
-V této části budou ukázány nejlepší výsledky segmentace všech dodaných testovacích mračen bodů. U každé segmentace bude uvedeno, při jakých parametrech byla segmentace provedena, kolik bodů bylo segmentováno a jak dlouho segmentace trvala. 
+\subsection{Výsledky segmentace dodaných dat}
+V této části budou ukázány nejlepší výsledky segmentace všech dodaných testovacích mračen bodů. U každého testu segmentace je uvedena tabulka s výsledky. Tabulka zobrazuje, kolik bodů z celkového počtu bylo segmentováno. Dále je v tabulce uvedeno, kolik segmentů bylo nalezeno, kolik segmentů bylo očekáváno (odhad) a také kolik nalezených segmentů je správných - tedy odpovídá jedné rovině v mračnu bodů. Dále je zde také uveden celkový čas segmentace, který je eště rozdělen na dvě části - segmentace do akumulátorového pole a klastrování bodů v poli. Také je zde pro zajímavost uveden čas, který zabralo vyhledávání sousedů v kd-stromu a SVD dekompozice. Tyto hodnoty jsou již zarnuty v celkovém času.
 
-Prvním testovaným mračnem je dům 2. Vstupní mračno je zobrazeno na obrázku \ref{fig:dum-stodulky}.
+Protože kvalitu segmentace lze jen těžko ohodnotit podle jednoduše měřitelných kritérií, bude u každého testovaného mračna zobrazen obrázek segmentovaných dat z několika úhlů. Každý segment je označen barevně (body stejné barvy patří do jednoho segmentu). Samozřejmě výsledek každé segmentace je na přiloženém CD, pro každý test jsou přiloženy dva soubory, jeden obsahuje pouze obarvená segmentovaná data, druhý navíc obsahuje i body, které nebyly segmentovány.
+
+\newpage
+\subsubsection{Dům 2}
+Prvním testovaným mračnem je dům 2. Vstupní mračno je zobrazeno na obrázku \ref{fig:dum-stodulky}. Parametry segmentace a měřitelné výsledky segmentace jsou uvedeny v tabulce \ref{table:test-d2}.
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|r|r|r|r|r|r|r|r|r|r|r|}
+\hline
+&\multicolumn{3}{c|}{\textbf{Parametry}} & \multicolumn{3}{c|}{\textbf{Body}} & \multicolumn{3}{c|}{\textbf{Segmenty}}&\ldots\\ \hline
+\textbf{test} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Celkem} & \multicolumn{2}{c|}{\textbf{Segmentováno}} & \textbf{Nalezeno} & \textbf{Očekáváno} & \textbf{Správných} &\ldots\\ \hline
+d2-1.0 & 10 & 2 & 10 & 723695 & 488026 & 67,44\% & 3 & 3 & 3 &\ldots\\ \hline
+\end{tabular}
+}
+\begin{flushright} \scalebox{0.9} {
+\begin{tabular}{|l|r|r|r|r|r|}
+\hline
+\ldots&\multicolumn{5}{|c|}{\textbf{Čas [s]}} \\ \hline
+\ldots&\textbf{Celkem} & \textbf{Segmentace} & \textbf{Klastrování} & \textbf{kd-strom} & \textbf{SVD} \\\hline
+\ldots&164,92 & 67,35 & 97,58 & 14,25 & 22,14 \\ \hline
+\end{tabular}
+}\end{flushright}
+
+\caption{Tabulka zobrazuje informace o segmentaci mračna dům 2. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastrování.} 
+\label{table:test-d2}
+\end{table}
+
+Ukázka segmentovaných dat je zobrazena na obrázku \ref{fig:test-d2}:  
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-d2}
+\caption{Segmentace mračna dům 2. (a) zobrazuje pouze segmentované body, (b) zobrazuje kromě segmentů i body, které nebyly segmentovány.}
+\label{fig:test-d2}
+\end{center}
+\end{figure}
+
+Výsledek segmentace považuji za správný a bez větších problémů. Bylo segmentováno 67\% ze všech bodů, zde by byl možná ještě prostor pro zlepšení, pravděpodobně by bylo možné přidat ještě cca 5\% bodů, které do segmentů patří. Zbylé body jsou však jen šum, jak je vidět na obrázku \ref{fig:test-d2} (b). 
+
+%\newpage
+\cleardoublepage
+\subsubsection{Stodůlky}
+
+Vstupní mračno je zobrazeno na obrázku \ref{fig:dum-stodulky}. Segmentace byla v tomto případě provedena ve dvou krocích, nejprve bylo mračno segmentováno s parametrem klastrování 9, poté bylo provedeno klastrování ve zbylém akumulátorovém poli s parametrem 12.
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|l|c|l|l|r|r|r|r|r|r|c|}
+\hline
+\textbf{} & \multicolumn{ 3}{c|}{\textbf{Parametry}} & \multicolumn{ 3}{c|}{\textbf{Body}} & \multicolumn{ 3}{c|}{\textbf{Segmenty}} &\ldots\\ \hline
+\multicolumn{1}{|c|}{\textbf{test}} & \textbf{P1} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \multicolumn{1}{c|}{\textbf{Celkem}} & \multicolumn{ 2}{c|}{\textbf{Segmentováno}} & \multicolumn{1}{c|}{\textbf{Nalezeno}} & \multicolumn{1}{c|}{\textbf{Očekáváno }} & \multicolumn{1}{c|}{\textbf{Správných}} &\ldots\\ \hline
+st-1.0 & \multicolumn{1}{r|}{48} & \multicolumn{1}{r|}{9} & \multicolumn{1}{r|}{10} & 604411 & 406188 & 67,20\% & 14 & 21 & 12 &\ldots\\ \hline
+st-1.1 & \multicolumn{1}{r|}{48} & \multicolumn{1}{r|}{12} & \multicolumn{1}{r|}{10} & 604411 & 16408 & 2,71\% & 3 & 21 & 3 &\ldots\\ \hline
+celkem: & \multicolumn{1}{l|}{} &  &  & 604411 & 422596 & 69,92\% & 17 & 21 & 15&\ldots \\ \hline
+\end{tabular}
+}
+\begin{flushright} \scalebox{0.9} {
+\begin{tabular}{|c|r|r|r|r|r|}
+\hline
+\ldots& \multicolumn{ 5}{|c|}{\textbf{Čas [s]}} \\ \hline
+\ldots& \multicolumn{1}{|c|}{\textbf{Celkem}} & \multicolumn{1}{c|}{\textbf{Segmentace}} & \multicolumn{1}{c|}{\textbf{Klastrování}} & \multicolumn{1}{c|}{\textbf{Kd-strom}} & \multicolumn{1}{c|}{\textbf{SVD}} \\ \hline
+\ldots& 190,39 & 118,19 & 72,21 & 34,62 & 36,47 \\ \hline
+\ldots& 15,07 & 0 & 15,07 & 0 & 0,02 \\ \hline
+\ldots& 205,46 & 118,19 & 87,27 & 34,62 & 36,49 \\ \hline
+\end{tabular}
+}\end{flushright}
+
+\caption{Tabulka zobrazuje informace o segmentaci mračna stodůlky. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastrování.} 
+\label{table:test-d2}
+\end{table}
+
+Ukázka segmentovaných dat je zobrazena na obrázku \ref{fig:test-st}:  
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-st}
+\caption{Segmentace mračna stodůlky. (a) zobrazuje první část segmentace, (b) zobrazuje celkovou segmentaci, (c) zobrazuje pohled na celkovou segmentaci shora, (d) zobrazuje celkovou segmentaci včetně bodů, které nebyly segmentovány.}
+\label{fig:test-st}
+\end{center}
+\end{figure}
+
+Lorem ipsum dolor sit Lorem ipsum dolor sit Lorem ipsum dolor sit Lorem ipsum dolor sit Lorem ipsum dolor sit Lorem ipsum dolor sitLorem ipsum dolor sitv Lorem ipsum dolor sit
+
+\newpage
+\subsubsection{Červená Lhota}
+
 
 
 %*****************************************************************************
