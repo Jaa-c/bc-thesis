@@ -168,3 +168,14 @@ I have no objection to usage of this work in compliance with the act \S 60 Záko
 % zada kapitolu s Literaturou do obsahu
 \def\@openbib@code{\addcontentsline{toc}{chapter}{\bibname}}
 
+\newenvironment{changeheight}[1]{%
+  \begin{list}{}{%
+    \setlength{\topsep}{0pt}%
+	\addtolength{\textheight}{#1}
+    \setlength{\leftmargin}{0pt}%
+    \setlength{\rightmargin}{0pt}%
+    \setlength{\listparindent}{\parindent}%
+    \setlength{\itemindent}{\parindent}%
+    \setlength{\parsep}{\parskip}%
+  }%
+  \item[]}{\end{list}}

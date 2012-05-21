@@ -896,6 +896,7 @@ V této části jsou otestovány oba algoritmy na reálných mračnech bodů, kt
 Během testování algoritmu bude nejprve na dvou různých mračnech bodů ukázáno, jaký vliv mají parametry segmentace na dobu a výstup segmentace. Poté bude porovnána segmentace jednoho mračna bodů při obou způsobech segmentování - jednak vybrání všech segmentů najednou a dále vybrání segmentů postupně. Dále pak budou v kapitole ukázány výsledky segmentace z dalších mračen bodů, zde už budou ukázány pouze výsledky s nelepšími parametry.
 
 \subsection{Vliv parametrů na výslednou segmentaci}
+\label{sub:vliv-param}
 
 Pro ukázku vlivu parametrů na výslednou segmentaci jsem vybral dvě různá mrančna (viz Obr. \ref{fig:dum-stodulky}). První mračno je označeno jako \uv{dům 2}, toto mračno je složeno z 723695 bodů a obsahuje 3 velké roviny. Oproti tomu druhé mračno \uv{stodůlky} obsahuje více jak 10 rovin a skládá se ze 604411 bodů. Obě mračna reprezentují část budovy, ale zároveň obsahují poměrně velké množství bodů, které do žádné roviny nepatří.
 
@@ -1118,7 +1119,7 @@ Vstupní mračno je zobrazeno na obrázku \ref{fig:dum-stodulky}. Segmentace byl
 \textbf{} & \multicolumn{ 3}{c|}{\textbf{Parametry}} & \multicolumn{ 3}{c|}{\textbf{Body}} & \multicolumn{ 3}{c|}{\textbf{Segmenty}} &\ldots\\ \hline
 \multicolumn{1}{|c|}{\textbf{test}} & \textbf{P1} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \multicolumn{1}{c|}{\textbf{Celkem}} & \multicolumn{ 2}{c|}{\textbf{Segmentováno}} & \multicolumn{1}{c|}{\textbf{Nalezeno}} & \multicolumn{1}{c|}{\textbf{Očekáváno }} & \multicolumn{1}{c|}{\textbf{Správných}} &\ldots\\ \hline
 st-1.0 & \multicolumn{1}{r|}{48} & \multicolumn{1}{r|}{9} & \multicolumn{1}{r|}{10} & 604411 & 406188 & 67,20\% & 14 & 21 & 12 &\ldots\\ \hline
-st-1.1 & \multicolumn{1}{r|}{48} & \multicolumn{1}{r|}{12} & \multicolumn{1}{r|}{10} & 604411 & 16408 & 2,71\% & 3 & 21 & 3 &\ldots\\ \hline
+st-1.1 & \multicolumn{1}{r|}{48} & \multicolumn{1}{r|}{12} & \multicolumn{1}{r|}{10} & 604411 & 16408 & 2,71\% & 3 & 7 & 3 &\ldots\\ \hline
 celkem: & \multicolumn{1}{l|}{} &  &  & 604411 & 422596 & 69,92\% & 17 & 21 & 15&\ldots \\ \hline
 \end{tabular}
 }
@@ -1147,7 +1148,43 @@ Ukázka segmentovaných dat je zobrazena na obrázku \ref{fig:test-st}:
 \end{center}
 \end{figure}
 
-Lorem ipsum dolor sit Lorem ipsum dolor sit Lorem ipsum dolor sit Lorem ipsum dolor sit Lorem ipsum dolor sit Lorem ipsum dolor sitLorem ipsum dolor sitv Lorem ipsum dolor sit
+\begin{changeheight}{3cm}
+Tato segmentace již není tak bezproblémová, jako ta předchozí. Na první pohled je patrné, že střecha na pravé části domu nebyla rozeznána. To je způsobeno tím, že povrch střechy je hrbolatý a proto není výpočet parametrů příliš přesný. Navíc střecha obsahuje menší počet bodů, než by se na první pohled zdálo (body jsou zde řidší, než na stěnách). Z těchto dvou důvodů body ze střechy nevytvoří v akumulátorovém poli dostatečný vrchol, aby byl segment rozeznán. V tomto případě nepomůže ani výrazně zvětšení parametru definujícího okolí. Dále jsem uvedl 21 očekávaných segmentů a nalezených pouze 15. Nebylo tedy nalezeno ještě 5 dalších segmentů - nicméně tyto plochy jsou již velmi malé a algoritmus je v zašuměném akumulátorovém poli nenašel. Dále byly nalezeny 2 segmenty, které jsem neoznačil jako správné. Tyto segmenty byly vytvořeny ze \uv{zbytků} jiného segmentu při iterativním prohledávání pole - vznikla tedy situace, kdy jsou nalezeny 2 segmenty v jedné rovině - tento problém byl již popsán dříve, v sekci \ref{sub:vliv-param}. Jeden z těchto segmentů je na zadní straně mračna (zelená a modrá stěna), druhý chybný segment je příliš malý, aby byl na obrázku zřetelný. 
+
+Obecně však lze říct, že za nenalezené segmenty je zodpovědné velké množství šumu v datech. Tento šum jednak nedovoluje prohledávat akumulátorové pole příliš podrobně a zároveň šum způsobuje, že je akumulátorové pole větší, než by bylo potřeba. Toto tvrzení můžu podložit následujícím testem. Mračno stodůlky je rozděleno do tří souborů. Jeden z těchto souborů obsahuje polovinu bodů, ale naprostou většinu rovin (neobsahuje tedy tolik šumu). Pokud provedu segmentaci pouze na této části z celkového mračna, výsledky segmentace jsou výrazně lepší, viz tabulka \ref{table:test-st-2} a obrázek \ref{fig:test-st-2}. 
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|r|r|r|r|r|r|r|r|r|r|r|}
+\hline
+&\multicolumn{3}{c|}{\textbf{Parametry}} & \multicolumn{3}{c|}{\textbf{Body}} & \multicolumn{3}{c|}{\textbf{Segmenty}}&\ldots\\ \hline
+\textbf{test} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{Celkem} & \multicolumn{2}{c|}{\textbf{Segmentováno}} & \textbf{Nalezeno} & \textbf{Očekáváno} & \textbf{Správných} &\ldots\\ \hline
+st-2.0 & 70 & 12 & 2 & 291232 & 215678 & 74,06\% & 18 & 19 & 18 &\ldots\\ \hline
+\end{tabular}
+}\\ \\
+\begin{flushright} \scalebox{0.9} {
+\begin{tabular}{|l|r|r|r|r|r|}
+\hline
+\ldots&\multicolumn{5}{|c|}{\textbf{Čas [s]}} \\ \hline
+\ldots&\textbf{Celkem} & \textbf{Segmentace} & \textbf{Klastrování} & \textbf{kd-strom} & \textbf{SVD} \\\hline
+\ldots&80,45 & 69,42 & 11,03 & 19,22 & 22,49 \\ \hline
+\end{tabular}
+}\end{flushright}
+
+\caption{Tabulka zobrazuje informace o segmentaci části mračna stodůlky.} 
+\label{table:test-st-2}
+\end{table}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-st-2}
+\caption{Segmentace mračna stodůlky. (a) zobrazuje pouze segmentaci, (b) zobrazuje segmentaci včetně bodů, které nebyly segmentovány.}
+\label{fig:test-st-2}
+\end{center}
+\end{figure}
+V tomto případě byly nalezeny správně všechny rovinné segmenty kromě střechy vlevo nahoře, která obsahuje jen velmi málo bodů, navíc není příliš rovná.
+\end{changeheight}
+
 
 \newpage
 \subsubsection{Červená Lhota}
