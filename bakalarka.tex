@@ -451,14 +451,9 @@ Poté je definováno nové akumulátorové pole pouze pro tyto body (způsobují
 Tímto jsme popsali celý algoritmus. Jak by mělo být patrné, algoritmus bere v úvahu vztahy bodů v prostoru parametrů a zároveň jejich vzdálenost v prostoru. Navíc je tento algoritmus poměrně robustní, protože při klastrování mají prioritu body, které mají podobnější parametry a zároveň jsou blízko v prostoru, před body, jejichž parametry jsou více odlišné.
 
 
-\section{Segmentace pomocí vyhledávání dominantních os}
-
-\cite{Seg02}
-
-
 \section{Proložení roviny množinou bodů}
 \label{sub:lsq}
-Důležitou součástí prvního algoritmu je proložení roviny množinou bodů pomocí metody nejmenších čtverců, viz \cite{wiki:leastsq}. Předpoklad tedy je, že chceme nalézt rovinu, která je co nejblíže od všech 3D bodů z dané množiny. Mějme množinu velikosti $k$, která obsahuje body ($p_1, \ldots, p_k$). Rovina je definována bodem $c$, který leží v rovině, a normálový vektorem $n$. Pro libovolný bod $x$ ležící v rovině platí vztah $n(x - c)^T = 0$. Pokud vezmeme bod $y$, který v rovině neleží, potom platí $n(y - c)^T \neq 0$. Je tedy vhodné definovat odchylku podle vztahu \ref{eq:odchylka}:
+Důležitou součástí algoritmu je proložení roviny množinou bodů pomocí metody nejmenších čtverců, viz \cite{wiki:leastsq}. Předpoklad tedy je, že chceme nalézt rovinu, která je co nejblíže od všech 3D bodů z dané množiny. Mějme množinu velikosti $k$, která obsahuje body ($p_1, \ldots, p_k$). Rovina je definována bodem $c$, který leží v rovině, a normálový vektorem $n$. Pro libovolný bod $x$ ležící v rovině platí vztah $n(x - c)^T = 0$. Pokud vezmeme bod $y$, který v rovině neleží, potom platí $n(y - c)^T \neq 0$. Je tedy vhodné definovat odchylku podle vztahu \ref{eq:odchylka}:
 
 \begin{equation}
 \label{eq:odchylka}
@@ -514,12 +509,10 @@ Stejně musíme upravit definici matice $M$, která bude v každém řádku obsa
 
 Tato kapitola se zabývá popisem implementace obou algoritmů. Algoritmy jsou implementovány v jazyce Java v rámci dodaného softwaru ArchiRec3D \cite{AR3D}. Kompletní zdrojový kód je k dispozici na přiloženém CD, viz kapitola~\ref{chap:CD}.
 
-\section{Segmentace na základě velikosti normálového vektoru}
-\label{sec:seg1}
 
 Implementaci tohoto algoritmu můžeme rozdělit na dvě hlavní části. První částí je výpočet parametrů pro všechny body a uložení bodů do akumulátorového pole. Druhou částí bude poté klastrování bodů v akumulátorovém poli. Tyto dvě části budou reprezentovány jako samostatné metody. První metoda bude mít na vstupu zpracovávané mračno bodů a jejím výstupem bude akumulátorové pole naplněné všemi body ze vstupního mračna. Druhá metoda bude mít toto akumulátorové pole na vstupu a výstupem budou body rozdělené do jednotlivých sementů. Takovéto rozdělení má hlavní výhodu v tom, že obě části budou na sobě nezávislé. Bude tedy možné jednou uložit body do akumulátorového pole a poté provést klastrování několikrát s různými parametry bez nutnosti znovu provádět první část.
 
-\subsection{Uložení bodů do akumulátorového pole}
+\section{Uložení bodů do akumulátorového pole}
 
 Tato část algoritmu bude procházet všechny body, na základě jejich okolí bude vypočítávat parametry, podle kterých budou body uloženy do akumulátorového pole. Vstupem bude tedy mračno bodů a výstupem akumulátorové pole. Prvním problémem bude tedy to, jak v paměti správě reprezentovat obě tyto struktury. To se samozřejmě musí odvíjet od operací, které budeme s daty provádět. Protože algoritmus implementuji v rámci dodaného nástroje, mám k dispozici několik základních datových struktur jako např \verb|vicitis.inner.Point3D| pro reprezentaci 3D bodu, \verb|vicitis.inner.Plane3D| pro reprezenatci roviny apod., tak samozřejmě tyto datové struktury využiji. Navíc je zde také implementováno mnoho vhodných metod využívajících tyto třídy, takže je logické použít již funkční řešení a nevymýšlet vlastní, které by bylo navíc duplicitní.
 
@@ -633,7 +626,7 @@ kde $s$ je souřadnice v akumulátorovém poli, $param$ je vypočtená vzdáleno
 Tímto máme první část algoritmu kompletně hotovou. Ve chvíli, kdy vypočteme parametry pro všechny body a uložíme je do akumulátorového pole, tak toto pole vrátíme a segmentace pokračuje druhou částí - klastrováním bodů.
 
 
-\subsection{Klastrování bodů v akumulátorovém poli}
+\section{Klastrování bodů v akumulátorovém poli}
 \label{sub:seg1-klastrovani}
 
 Tato část algoritmu se zabývá tím, jak v akumulátorovém poli správně identifikovat jednotlivé segmenty a jak je poté z pole vybrat. Teorie je taková, že každý segment vytvoří v akumulátorovém poli vrchol (viz Obr. \ref{fig:acc-pole}), který detekujeme a poté všechny body z takového vrcholu zahrneme do jednoho segmentu. Ačkoliv se to může zdát poměrně jednoduché, v praxi lze narazit na několik problémů. Jedním z takových problémů může být např. to, že každý vrchol je jinak vysoký a obsahuje jiný počet bodů, takže je nutné stanovit nějakou hranici, kdy vrchol ještě označíme za segment a kdy už bude jenom nějakým náhodným výsledkem šumu. Dalším problémem je situaci, kdy jsou dva vrcholy velmi blízko u sebe a nejde rozlišit, kde je mezi nimi hranice. V takovém případě musíme využít nějakou další znalost o bodech z objektového prostoru. Může nastat další podobný problém, kdy jsou dva vrcholy blízko u sebe a na první pohled nedokážeme určit, že se jedná o dva vrcholy a ne jen jeden. Problematická se poté ukáže i samotná definice vrcholu. V praxi může být jeden takový vrchol tvořen několika menšími vrcholy v těsné blízkosti. Musíme být tedy schopni rozlišit, kdy takové vrcholy tvoří jeden segment a kdy už ne. Toto jsou ve stručnosti hlavní problémy, kterými se budu v této kapitole zabývat.
@@ -685,7 +678,7 @@ Pokud jsou všechny segmenty ukončeny, proces ještě není hotový. Již na za
 Uživatel má však v tuto chvíli stále k dispozici ukazatel na zbylé akumulátorové pole. Může se tedy rozhodnout změnit hodnotu parametrů a segmentaci nad tímto zbylým polem provést znovu. Tento způsob dává uživateli poměrně mocný nástroj, jak vybírat roviny z akumulátorového pole postupně. Roviny, které vybere nejdříve, jsou teoreticky ty nejpřesnější a nejkvalitnější. Pokud bude uživatel postupně měnit parametry a vybírat další roviny, bude jejich kvalita pravděpodobně klesat. Uživatel může tedy měnit parametry a vybírat roviny do té doby, dokud mu kvalita vybíraných rovin přijde dostatečná. Tento proces ale také vůbec nemusí použít a může navolit parametry tak, aby bylo hned napoprvé vybráno co nejvíce rovin. V tomto ohledu nabízí implementace algoritmu poměrně velkou volnost.
 
 
-\subsection{Rekapitulace zadávaných parametrů a jejich použití}
+\section{Rekapitulace zadávaných parametrů a jejich použití}
 \label{sub:param}
 
 Pro přehlednost bych rád zrekapituloval, jakým způsobem může uživatel ovlivnit výsledky segmentace. Definovali jsme celkem tři parametry, velikost koule definující okolí při výpočtu parametrů bodu a poté dva parametry při klastrování bodů. První parametr ovlivňuje okolí bodu, čímž zásadně ovlivňuje i vypočítané parametry bodu a tím celou segmentaci. Parametr se řádově volí z intervalu 20 - 200 bodů, kdy běžné hodnoty by měly být v rozsahu 40 - 80 bodů. Čím více bodů, tím by měl být výpočet parametrů bodu přesnější, ale také pomalejší. Zároveň ale musíme přizpůsobit hodnotu parametru vstupním datům, kdy pro horší data musíme volit spíše vyšší hodnotu parametru. 
@@ -710,9 +703,9 @@ Konkrétní vliv těchto parametrů na výslednou segmentaci je popsán v násle
 
 \subsection{Struktura zdrojového kódu}
 
-Protože se jedná o implementaci jednoúčelových algoritmů, struktura použitých tříd je poměrně jednoduchá. Pro každý algoritmus je vytvořená samostatná třída umístěná v balíčku \verb|vicitis.tools| Dále jsem vytvořil dvě třídy, které implementují prokládání bodů rovinou pomocí metody nejmenších čtverců. Jde o třídy \verb|LeastSquare|, která implementuje základní verzi, a \verb|WeightedLeastSquare|, která implementuje váženou verzi metody nejmenších čtverců. Obě metodv balíčku \verb|vicitis.inner.methods|. Tyto třídy jsou oddělené od obou algoritmů pro lepší znovupoužitelnost v rámci celého systému. Obě třídy jsou na použití velmi jednoduché, obsahují jednu statickou metodu \verb|fitPlane|, která má na vstupu body a případně jejich váhy a vrací instanci třidy \verb|Plane3D|, tedy reprezentaci roviny.
+Protože se jedná o implementaci jednoúčelového algoritmu, struktura použitých tříd je poměrně jednoduchá. Pro  algoritmus je vytvořená samostatná třída umístěná v balíčku \verb|vicitis.tools| Dále jsem vytvořil dvě třídy, které implementují prokládání bodů rovinou pomocí metody nejmenších čtverců. Jde o třídu \verb|LeastSquare|, která implementuje základní verzi, a \verb|WeightedLeastSquare|, která implementuje váženou verzi metody nejmenších čtverců. Tyto třídy jsou oddělené od obou algoritmů pro lepší znovupoužitelnost v rámci celého systému, nacházejí se v balíčku \verb|vicitis.inner.methods|. Obě třídy jsou na použití velmi jednoduché, obsahují jednu statickou metodu \verb|fitPlane|, která má na vstupu body a případně jejich váhy a vrací instanci třidy \verb|Plane3D|, tedy reprezentaci roviny.
 
-První algoritmus, segmentace na základě velikosti normálového vektoru, se nachází v třídě \verb|PlannarSegmentation|. Rozhraní třídy pro běžné používání je poměrně jednoduché. Obsahuje dvě jednoduché metody, pomocí kterých se třídě nastavuje vstupní mračno bodů, resp. získává výsledné segmentované mračno. Tyto metody jsou na ukázce \ref{code:seg-in-out}.
+Samotný algoritmus se nachází v třídě \verb|PlannarSegmentation|. Rozhraní třídy pro běžné používání je poměrně jednoduché. Obsahuje dvě metody, pomocí kterých se třídě nastavuje vstupní mračno bodů, resp. získává výsledné segmentované mračno. Tyto metody jsou na ukázce \ref{code:seg-in-out}.
 
 \begin{lstlisting}[label=code:seg-in-out,caption={Metody pro nastavení vstupu a získání výstup algoritmu.}]
 /**
@@ -732,7 +725,7 @@ public HashMap<Integer, ArrayList<Point3D>> getSegmentedPointCloud() {
 }
 \end{lstlisting}
 
-Pro použití samotného algoritmu třída obsahuje další dvě metody, viz ukázka \ref{code:seg-methods}. Jedna metoda slouží k uložení bodů do akumulátorového pole a druhá ke klastrování těchto bodů v akumulátorovém poli. Parametry, které jsou do těchto metod zadávané, jsou popsané v předchozí sekci \ref{sub:param}.
+Pro použití samotného algoritmu třída obsahuje další dvě metody, viz ukázka \ref{code:seg-methods}. Jedna metoda slouží k uložení bodů do akumulátorového pole a druhá ke klastrování těchto bodů v akumulátorovém poli. Parametry, které tyto metody vyžadují, jsou popsané v předchozí sekci \ref{sub:param}.
 
 \begin{lstlisting}[label={code:seg-methods},caption={Metody určené pro používání algoritmu.}]
 /**
@@ -831,7 +824,6 @@ Veškeré testování probíhalo v této konfiguraci:
 
 Pro ověření funkčnosti jsem vytvořil jednoduchý generátor mračna bodů. Generátoru se zadá počet rovin, které chceme generovat, poté velikost těchto rovin a hustota bodů. Generátor vyvoří zadaný počet rovin v prostoru relativně blízko sebe, aby se některé roviny protínaly. Body v rámci roviny mají vždy nějakou malou dochylku, neleží přesně v rovině. Zdrojové kódy generátoru jsou na přiloženém CD, konkrétně se jedná o třídu \verb|PlaneGenerator| z balíčku \verb|vicitis.inner.segmentation.pointcloudSegmentation|. Stejně tak vstupní a výstupní mračna ze všech testů jsou k dispozici na přiloženém CD, viz seznam souborů v kapitole \ref{chap:CD}. 
 
-\subsection{Segmentace na základě velikosti normálového vektoru}
 
 Segmentování bylo provedeno za pomoci popsaného generátoru mračna bodů. Testoval se počet bodů, které byly z celkového počtu všech bodů segmentovány. V generovaných datech všechny body spadají do nějaké roviny, takže teoreticky by mohl algoritmus segmentovat vždy 100\% bodů. Dalším kritériem testování byl počet bodů, které byly chybně přiřazeny do segmentu, do kterého nepatřily (nejčastěji body podél hran). Tato hodnota byla pouze řádově odhadnuta podle výsledků segmentace, není možné jednoduše určit přesnou hodnotu. Při této testovací segmentaci byla provedena celá segmentace najedou, parametr klastrování nebyl během segmentace upravován. Výsledky testování jsou uvedeny v tabulce \ref{table:test1-gen}.
 
@@ -883,11 +875,6 @@ Pro ilustraci přidávám ještě jednu ukázku testovací segmentace, na obráz
 
 Vzhledem k tomu, že ve všech testovacích případech byly nalezeny všechny roviny, algoritmus rozhodně funguje správně. Zároveň ve všech případech bylo segmentováno více jak 99,3\% bodů. Ve většině případů byl počet špatně přiřazených bodů velmi malý, kromě dvou již zmiňovaných případů.
 
-\subsection{Segmentace pomocí vyhledávání dominantních os}
-
-lorem ipsum :)
-
-
 \newpage
 \section{Testování kvality algoritmů na reálných datech}
 
@@ -932,7 +919,7 @@ d2-0.13 & 40 & 2 & 1 & 56,91\% & 3 \\ \hline
 d2-0.14 & 80 & 2 & 1 & 61,12\% & 4 \\ \hline
 d2-0.15 & 120 & 2 & 1 & 54,38\% & 4 \\ \hline
 \end{tabular}
-\caption{Tabulka zobrazuje výsledky testování algoritmu na mračnu dům 2 při různých parametrech. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastrování.} 
+\caption{Tabulka zobrazuje výsledky testování algoritmu na mračnu dům 2 při různých parametrech. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
 \label{table:test2-param-d2}
 \end{center}
 \end{table}
@@ -969,7 +956,7 @@ st-0.05 & 30 & 8 & 5 & 66,10\% & 12 \\ \hline
 st-0.06 & 30 & 9/10 & 5 & 66,40\% & 13 \\ \hline
 st-0.07 & 30 & 11 & 5 & 66,50\% & 14 \\ \hline
 \end{tabular}
-\caption{Tabulka zobrazuje výsledky testování algoritmu na mračnu stodůly při různých parametrech klastrování. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastrování.} 
+\caption{Tabulka zobrazuje výsledky testování algoritmu na mračnu stodůly při různých parametrech klastrování. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
 \label{table:test3-klastr}
 \end{center}
 \end{table}
@@ -1048,7 +1035,7 @@ Z grafu je také jasně vidět, že hodnota parametrů ovlivňuje zejména dobu 
 \textbf{18} & 40 & 8 & 5 & 138,28 & 102,05 & 73,80\% & 36,23 & 26,20\% & 28,53 & 20,63\% & 33,37 & 24,13\% \\ \hline
 \end{tabular}
 }
-\caption{Tabulka zobrazuje výsledky testování rychlosti algoritmu v závislosti na zadaných parametrech. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastroání.} 
+\caption{Tabulka zobrazuje výsledky testování rychlosti algoritmu v závislosti na zadaných parametrech. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
 \label{table:test-cas}
 \end{table}
 
@@ -1134,7 +1121,7 @@ celkem: & \multicolumn{1}{l|}{} &  &  & 604411 & 422596 & 69,92\% & 17 & 21 & 15
 \end{tabular}
 }\end{flushright}
 
-\caption{Tabulka zobrazuje informace o segmentaci mračna stodůlky. P1 je parametr definující okolí, P2 parametr klastrování a P3 parametr určující kvalitu klastrování.} 
+\caption{Tabulka zobrazuje informace o segmentaci mračna stodůlky. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
 \label{table:test-d2}
 \end{table}
 
@@ -1151,7 +1138,7 @@ Ukázka segmentovaných dat je zobrazena na obrázku \ref{fig:test-st}:
 \begin{changeheight}{3cm}
 Tato segmentace již není tak bezproblémová, jako ta předchozí. Na první pohled je patrné, že střecha na pravé části domu nebyla rozeznána. To je způsobeno tím, že povrch střechy je hrbolatý a proto není výpočet parametrů příliš přesný. Navíc střecha obsahuje menší počet bodů, než by se na první pohled zdálo (body jsou zde řidší, než na stěnách). Z těchto dvou důvodů body ze střechy nevytvoří v akumulátorovém poli dostatečný vrchol, aby byl segment rozeznán. V tomto případě nepomůže ani výrazně zvětšení parametru definujícího okolí. Dále jsem uvedl 21 očekávaných segmentů a nalezených pouze 15. Nebylo tedy nalezeno ještě 5 dalších segmentů - nicméně tyto plochy jsou již velmi malé a algoritmus je v zašuměném akumulátorovém poli nenašel. Dále byly nalezeny 2 segmenty, které jsem neoznačil jako správné. Tyto segmenty byly vytvořeny ze \uv{zbytků} jiného segmentu při iterativním prohledávání pole - vznikla tedy situace, kdy jsou nalezeny 2 segmenty v jedné rovině - tento problém byl již popsán dříve, v sekci \ref{sub:vliv-param}. Jeden z těchto segmentů je na zadní straně mračna (zelená a modrá stěna), druhý chybný segment je příliš malý, aby byl na obrázku zřetelný. 
 
-Obecně však lze říct, že za nenalezené segmenty je zodpovědné velké množství šumu v datech. Tento šum jednak nedovoluje prohledávat akumulátorové pole příliš podrobně a zároveň šum způsobuje, že je akumulátorové pole větší, než by bylo potřeba. Toto tvrzení můžu podložit následujícím testem. Mračno stodůlky je rozděleno do tří souborů. Jeden z těchto souborů obsahuje polovinu bodů, ale naprostou většinu rovin (neobsahuje tedy tolik šumu). Pokud provedu segmentaci pouze na této části z celkového mračna, výsledky segmentace jsou výrazně lepší, viz tabulka \ref{table:test-st-2} a obrázek \ref{fig:test-st-2}. 
+V tomto případě je za nenalezené segmenty zodpovědné větší množství šumu a duplicita v datech. Šum nedovoluje prohledávat akumulátorové pole příliš podrobně a mračno navíc obsahuje velké množství duplicitních bodů (obě čelní stěny jsou v mračnu dvakrát). To zbytečně zvyšuje velikost akumulátorového pole, tím pádem nejsou vrcholy v poli tak výrazné. Mračno stodůlky je rozděleno do tří souborů. Jeden z těchto souborů obsahuje polovinu bodů, ale naprostou většinu rovin. Navíc neobsahuje duplicitní body (jednotlivé soubory se překrývají, tím vznikají duplicity). Pokud provedu segmentaci pouze na tomto jednom souboru, výsledky jsou výrazně lepší, viz tabulka \ref{table:test-st-2} a obrázek \ref{fig:test-st-2}. 
 
 \begin{table}[ht]
 \resizebox{\textwidth}{!} {
@@ -1171,7 +1158,7 @@ st-2.0 & 70 & 12 & 2 & 291232 & 215678 & 74,06\% & 18 & 19 & 18 &\ldots\\ \hline
 \end{tabular}
 }\end{flushright}
 
-\caption{Tabulka zobrazuje informace o segmentaci části mračna stodůlky.} 
+\caption{Tabulka zobrazuje informace o segmentaci části mračna stodůlky. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
 \label{table:test-st-2}
 \end{table}
 
@@ -1182,12 +1169,69 @@ st-2.0 & 70 & 12 & 2 & 291232 & 215678 & 74,06\% & 18 & 19 & 18 &\ldots\\ \hline
 \label{fig:test-st-2}
 \end{center}
 \end{figure}
-V tomto případě byly nalezeny správně všechny rovinné segmenty kromě střechy vlevo nahoře, která obsahuje jen velmi málo bodů, navíc není příliš rovná.
+V tomto případě byly nalezeny správně všechny rovinné segmenty kromě malé střechy vlevo nahoře, která obsahuje jen velmi málo bodů a není příliš rovná. Z tohoto testu také vyplývá, že algoritmus je citlivý na různou hustotu bodů v rámci jednotlivých rovin.
 \end{changeheight}
 
 
-\newpage
+\cleardoublepage
 \subsubsection{Červená Lhota}
+
+Toto mračno reprezentuje zámek Červená Lhota. Mračno obsahuje poměrně velké množství bodů, které jsou velmi daleko od snímaného objektu (šum) a výrazná část bodů je obsažena mimo stěny budovy, viz obrázek \ref{fig:cervena-lhota}. Mračno je tedy poměrně odlišné od dvou předchozích a bude zajímavé, jak si s ním algoritmus poradí.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/cervena-lhota}
+\caption{Ukázka mračna Červená Lhota.}
+\label{fig:cervena-lhota}
+\end{center}
+\end{figure}
+
+Výsledky segmentace jsou zaznamenány v tabulce \ref{table:test-cl} a ukázka výsldné segmentace z různých úhlů je vidět na obrázku \ref{fig:test-cl}. Obrázky této segmentace bohužel nejsou tolik přehledné jako u předešlých testování, lepší je prohlédnou si celé mračno na přiloženém CD.
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|r|r|r|r|r|r|r|r|r|r|r|}
+\hline
+\textbf{} & \multicolumn{ 3}{c|}{\textbf{Parametry}} & \multicolumn{ 3}{c|}{\textbf{Body}} & \multicolumn{ 3}{c|}{\textbf{Segmenty}}&\ldots \\ \hline
+\multicolumn{1}{|c|}{\textbf{test}} & \textbf{P1} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \textbf{Celkem} & \multicolumn{ 2}{c|}{\textbf{Segmentováno}} & \textbf{Nalezeno} & \multicolumn{1}{c|}{\textbf{Očekáváno }} & \multicolumn{1}{c|}{\textbf{Správných}}&\ldots \\ \hline
+cl-0.0 & \multicolumn{1}{r|}{60} & \multicolumn{1}{r|}{10} & \multicolumn{1}{r|}{5} & \multicolumn{1}{r|}{611095} & \multicolumn{1}{r|}{331336} & \multicolumn{1}{r|}{54,22\%} & \multicolumn{1}{r|}{16} & \multicolumn{1}{r|}{18} & \multicolumn{1}{r|}{16} &\ldots\\ \hline
+\end{tabular}
+}
+\begin{flushright} \scalebox{0.9} {
+\begin{tabular}{|r|r|r|r|r|r|}
+\hline
+\ldots & \multicolumn{ 5}{|c|}{\textbf{Čas [s]}} \\ \hline
+\ldots &\textbf{Celkem} & \multicolumn{1}{c|}{\textbf{Segmentace}} & \multicolumn{1}{c|}{\textbf{Klastrování}} & \multicolumn{1}{c|}{\textbf{Kd-strom}} & \multicolumn{1}{c|}{\textbf{SVD}} \\ \hline
+\ldots &\multicolumn{1}{|r|}{328,81} & \multicolumn{1}{r|}{163,63} & \multicolumn{1}{r|}{165,18} & \multicolumn{1}{r|}{48,19} & \multicolumn{1}{r|}{50,83} \\ \hline
+\end{tabular}
+}\end{flushright}
+
+\caption{Tabulka zobrazuje informace o segmentaci mračna bodů Červená Lhota. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
+\label{table:test-cl}
+\end{table}
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-cl}
+\caption{Ukázka segmentace mračna Červená Lhota z různých úhlů.}
+\label{fig:test-cl}
+\end{center}
+\end{figure}
+
+Segmentace identifikovala všechny roviny v rámci hlavního objektu. V tabulce je uvedeno, že nebyly nalezeny 2 roviny. Algoritmus nenašel střechu na zadní straně. Střechu našel při zvýšení parametru klastrování, ale to se již také začaly objevovat chybné segmenty, proto jsem vybral segmentaci, která tuto jednu rovinu nenalezla. Poté ještě nebyla malá rovina na pravé straně zámku, ta obsahuje poměrně málo bodů, pravděpodobně proto již nebyla při segmentaci rozpoznána.
+
+Dále by se mohlo zdát, že z čelní a levé strany chybí v segmentech body. To ale není chyba algoritmu, v těchto stěnách je takto málo bodů už ve vstupním mračnu, algoritmus jich naopak segmentoval naprostou většinu. Výraznější chyba v segmentaci je červená rovina vlevo, která zahrnuje i body, které již nepatří do stěny, ale jde o část skály. Rovina měla pravděpodobně již od začátku větší RMS, proto se takto \uv{rozrostla} i o body, které do ní přímo nepatří, včetně několika bodů ze sousedních stěn. Takovéto chybě se nedá jednoduše vyhnout, pokud je již ze začátku kvalita roviny (velikost RMS) horší, rovina často obsáhne i okolní body, které do ní již přímo nespadají.
+
+Celkově bych však segmentaci ohodnotil jako úspěšnou, kromě dvou menších rovin byly na objektu rozeznány všechny stěny. Segmenty navíc obsahují naprostou většinu bodů z těchto rovin. Segmentace také nebyla viditelně ovlivněna větším množstvím chybných bodů mimo roviny.
+
+\newpage
+\subsubsection{Doudleby}
+
+\newpage
+\subsubsection{Faust}
+
+\newpage
+\subsubsection{Langweil}
 
 
 
@@ -1236,13 +1280,14 @@ V tomto případě byly nalezeny správně všechny rovinné segmenty kromě st�
 
 %*****************************************************************************
 \chapter{Seznam použitých zkratek}
+\label{chap:zkratky}
 
 \begin{description}
-\item[2D] Two-Dimensional
-\item[ABN] Abstract Boolean Networks
-\item[ASIC] Application-Specific Integrated Circuit
+\item[RMS] Root Mean Square, česky efektivní hodnota. Určuje velikost měnící se veličiny.
+\item[P1] Parametr, který určuje velikost okolí bodu.
+\item[P2] Paramter klastrování, který určuje práh vyhledávání vrcholů v akumulátorovém poli.
+\item[P3] Paramter, který určuje kvalitu klastrování.
 \end{description}
-\vdots
 
 
 %*****************************************************************************
