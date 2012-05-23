@@ -1315,7 +1315,7 @@ fa-0.0 & \multicolumn{1}{r|}{35} & \multicolumn{1}{r|}{10} & \multicolumn{1}{r|}
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=\textwidth]{figures/test-fa}
-\caption{Ukázka segmentace mračna Fautův dům. (a) zobrazuje pouze nalezené segmenty, (b) zobrazuje segmenty včetně bodů, které nebyly segmentovány.}
+\caption{Ukázka segmentace mračna Faustův dům. (a) zobrazuje pouze nalezené segmenty, (b) zobrazuje segmenty včetně bodů, které nebyly segmentovány.}
 \label{fig:test-fa}
 \end{center}
 \end{figure}
@@ -1368,7 +1368,7 @@ lw-0.0 & \multicolumn{1}{r|}{10} & \multicolumn{1}{r|}{15} & \multicolumn{1}{r|}
 \begin{center}
 \includegraphics[width=\textwidth]{figures/test-lw}
 \caption{Ukázka segmentace mračna Langweil. (a) zobrazuje pouze nalezené segmenty, (b) zobrazuje segmenty včetně bodů, které nebyly segmentovány.}
-\label{fig:test-fa}
+\label{fig:test-lw}
 \end{center}
 \end{figure}
 
@@ -1377,11 +1377,17 @@ Segmentace mračna není určitě tak kvalitní, jak by se dalo očekávat. Prob
 Nicméně minimálně spodní velká rovina byla nalezena, stejně tak několik rovnějších střech bylo identifikováno správně. Algoritmus by tedy neměl mít problém segmentovat menší mračna s menší hustotou bodů.
 
 
-
-\newpage
 \section{Shrnutí výsledků testování}
 
-Lorem ipsum\ldots
+V první části testování jsme ověřovali funkčnost algoritmu na uměle genereovaných datech. Ve všech těchto testech byly nalezeny všechny roviny a bylo segmentováno více jak 99\% bodů, algoritmus tedy na těchto ideálních datech funguje správně.
+
+Testování segmentace na reálných datech už nebylo tak bezproblémové, jako u generovaných dat. Celkově však algoritmus vždy našel většinu rovin a a do segmentu přiřadil vetšinu vodů z dané roviny. Nicméně ne všechny roviny byly vždy nalezeny. Pokud byla nějaká rovina při segmentaci vynechána, obvykle byla tato rovina výrazně menší, než ostatní nalezené roviny, resp. obsahovala výrazně méně bodů. Problematická se tedy ukázala i situace, kdy měli roviny výrazněji odlišnou hudtotu bodů. Roviny s malou hustotu bodů (tedy i malým počtem bodů) často v akumlátorovém poli nevytvořily dostatečně výrazný vrchol a nebyly nalezeny. Dále také nemusejí být nalezené roviny, které na malém měřítku nejsou příliš rovné, naopak jsou různě zvlněné nebo hrbolaté. Do určité míry se dá toto kompenzovat správným nastavením parametrů, někdy ale ani to nestačí. 
+
+Dále jsme při testování také narazili na dva problémy, které se netýkali přímo nalezení segmentů, ale jejich kvality či správnosti. Prvním problémem byla situace, kdy v akumulátorovém poli dvě roviny vytvořily vrcholy těsně vedle sebe a při vyhledávání vrcholů byl nalezen jen jeden. V této situaci mohli být do segmentu přiřazeny body i z druhého vrcholu, tedy z jiné roviny. Taková situace při reálném testování je zobrazena na obrázku \ref{fig:test-do} (b), kde zelený segment střechy obsahuje i body z boční stěny. Druhým problémem byla situace, kdy v nejvyšší buňce z vrcholu v akumulátorovém poli byly velmi přesné body. Segment tvořený těmito body poté obsahoval pouze body, které leželi velmi přesně v rovině. V akumulátorovém poli poté zbyly body, které stále ještě leželi v rovině, která již nebyla tak přesná. Pokud bylo takových bodů dostatečné množství, při další iteraci prohledávání akumulátorového pole mohli být identifikovány jako segment. Výsledkem tedy byly dva segmenty v jdné rovině. Příklad této situace je zobrazen na obrázku \ref{fig:test-fa}.
+
+V celkovém součtu všech testů\footnote{kromě posledního testu mračna Langweil, které nebylo pro test příliš vhodné} mračna obsahovala 85 rovin a algoritmus správně detekoval 68 rovin, což je přesně 80\%. Algoritmus tedy není bezchybný, ale je schopen správně detekovat většinu rovin. Navíc nenalezené roviny jsou vždy menší či méně přesné, nestali se, aby algoritmus nenašel nějakou výraznou rovinu.
+
+Co se týče paměťových a časových nároků, ty jsou logicky nejvíce závislé zejména na velikosti vstupních dat. Doba běhu algoritmu je navíc závislá na zadaných parametrech, které mohou segmentaci zkvalitnit, vždy ale na úkor delšího běhu algoritmu.
 
 
 %*****************************************************************************
