@@ -1237,7 +1237,7 @@ Toto mračno reprezentuje zámek Douleby nad Orlicí. Mračno je poměrně velk�
 \end{center}
 \end{figure}
 
-Výsledky segmentace jsou zaznamenány v tabulce \ref{table:test-do} a ukázka výsldné segmentace z různých úhlů je vidět na obrázku \ref{fig:test-do}.
+Výsledky segmentace jsou zaznamenány v tabulce \ref{table:test-do} a ukázka výsledné segmentace z různých úhlů je vidět na obrázku \ref{fig:test-do}.
 
 \begin{table}[ht]
 \resizebox{\textwidth}{!} {
@@ -1275,9 +1275,9 @@ Aby byla nalezena aspoň ta největší střecha, bylo nutné použít větší 
 
 
 \cleardoublepage
-\subsubsection{Faust}
+\subsubsection{Faustův dům}
 
-Vstupní mračno je zobrazeno na obrázku \ref{fig:faust}. Toto mračno je největší, které jsem měl při testování k dispozici, obsahuje necelých 1,5 milionu bodů.
+Vstupní mračno zachycuje část Faustova domu na Karlově náměstí. Mračno je zobrazeno na obrázku \ref{fig:faust}. Toto mračno je největší, které jsem měl při testování k dispozici, obsahuje necelých 1,5 milionu bodů.
 
 \begin{figure}[H]
 \begin{center}
@@ -1287,10 +1287,101 @@ Vstupní mračno je zobrazeno na obrázku \ref{fig:faust}. Toto mračno je nejv�
 \end{center}
 \end{figure}
 
+Výsledky testování jsou uvedeny v tabulce \ref{table:test-fa} a ukázka segmentace je zobrazena na obrázku \ref{fig:test-fa}.
 
-\newpage
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|l|r|r|r|r|r|r|r|r|r|c|}
+\hline
+\textbf{} & \multicolumn{ 3}{c|}{\textbf{Parametry}} & \multicolumn{ 3}{c|}{\textbf{Body}} & \multicolumn{ 3}{c|}{\textbf{Segmenty}} &\ldots \\ \hline
+\multicolumn{1}{|c|}{\textbf{test}} & \textbf{P1} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \textbf{Celkem} & \multicolumn{ 2}{c|}{\textbf{Segmentováno}} & \textbf{Nalezeno} & \multicolumn{1}{c|}{\textbf{Očekáváno }} & \multicolumn{1}{c|}{\textbf{Správných}} &\ldots\\ \hline
+fa-0.0 & \multicolumn{1}{r|}{35} & \multicolumn{1}{r|}{10} & \multicolumn{1}{r|}{10} & \multicolumn{1}{r|}{1492940} & \multicolumn{1}{r|}{965492} & \multicolumn{1}{r|}{64,67\%} & \multicolumn{1}{r|}{6} & \multicolumn{1}{r|}{8} & \multicolumn{1}{r|}{5} &\ldots\\ \hline
+\end{tabular}
+
+}
+\begin{flushright} \scalebox{0.9} {
+\begin{tabular}{|c|r|r|r|r|r|}
+\hline
+\ldots& \multicolumn{ 5}{|c|}{\textbf{Čas [s]}} \\ \hline
+\ldots& \textbf{Celkem} & \multicolumn{1}{c|}{\textbf{Segmentace}} & \multicolumn{1}{c|}{\textbf{Klastrování}} & \multicolumn{1}{c|}{\textbf{Kd-strom}} & \multicolumn{1}{c|}{\textbf{SVD}} \\ \hline
+\ldots& \multicolumn{1}{|r|}{1033,98} & \multicolumn{1}{r|}{336,76} & \multicolumn{1}{r|}{697,22} & \multicolumn{1}{r|}{93,58} & \multicolumn{1}{r|}{105,49} \\ \hline
+\end{tabular}
+}\end{flushright}
+
+\caption{Tabulka zobrazuje informace o segmentaci mračna bodů Faustův dům. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
+\label{table:test-fa}
+\end{table}
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-fa}
+\caption{Ukázka segmentace mračna Fautův dům. (a) zobrazuje pouze nalezené segmenty, (b) zobrazuje segmenty včetně bodů, které nebyly segmentovány.}
+\label{fig:test-fa}
+\end{center}
+\end{figure}
+
+Na této segmentaci se projevila chyba, kdy z jedné stěny nebyly vybrány všechny body a při další iteraci byl v té samé stěně nalezen nový segment. Tento problém byl již dříve v této kapitole popsán. Tomuto problému jsem se snažil vyhnout tím, že jsem nastavil kvalitu klastrování na 10. Doufal jsem, že při první iteraci bude vybrána většina bodů z roviny a a vdalší iteraci již nezbydou body, které by byly rozeznány jako segment. Bohužel ani toto se neukázalo jako řešení, vedlejším důsledkem byl navíc velký čas klastrování bodů - více jak 11 minut, celkový čas segmentace přesáhl 17 minut a byl nejdelší ze všech testů.
+
+Dále nebyly nalezeny menší roviny spojující největší stěny domu. Tyto roviny jsou ale velmi malé a zároveň rohy domu jsou při bližším pohledu výrazně zakulacené, takže pouze malá část z této roviny je doopravdy rovná. Bohužel je tato část příliš malá, aby jí algoritmus v v tak velkém počtu bodů našel. Dále by se dalo segmentaci vytknout, že v levé části budovy mohlo být do segmentu přiřazeno více bodů.
+
+Celkově bych tuto segmentaci označil za nejhorší ze všech testovaných. Všechny největší segmenty segmenty byly nalezeny, ale určitě zde je prostor pro zkvalitnění segmentace. 
+
+\cleardoublepage
 \subsubsection{Langweil}
 
+Toto mračno je sken části Langweilova modelu Prahy, což je papírový model pražského starého města z devatenáctého století, viz obrázek \ref{fig:langweil}. Mračno je velmi malé, obsahuje pouze 125 tisíc bodů.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/langweil}
+\caption{Ukázka mračna Langweil.}
+\label{fig:langweil}
+\end{center}
+\end{figure}
+
+Výsledky testování jsou uvedeny v tabulce \ref{table:test-lw} a ukázka segmentace je zobrazena na obrázku \ref{fig:test-lw}.
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|r|r|r|r|r|r|r|r|r|r|c|}
+\hline
+\textbf{} & \multicolumn{ 3}{c|}{\textbf{Parametry}} & \multicolumn{ 3}{c|}{\textbf{Body}} & \multicolumn{ 3}{c|}{\textbf{Segmenty}} & \ldots\\ \hline
+\multicolumn{1}{|c|}{\textbf{test}} & \textbf{P1} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \textbf{Celkem} & \multicolumn{ 2}{c|}{\textbf{Segmentováno}} & \textbf{Nalezeno} & \multicolumn{1}{c|}{\textbf{Očekáváno }} & \multicolumn{1}{c|}{\textbf{Správných}} & \ldots\\ \hline
+lw-0.0 & \multicolumn{1}{r|}{10} & \multicolumn{1}{r|}{15} & \multicolumn{1}{r|}{3} & \multicolumn{1}{r|}{125909} & \multicolumn{1}{r|}{93816} & \multicolumn{1}{r|}{74,51\%} & \multicolumn{1}{r|}{25} & \multicolumn{1}{r|}{cca. 28} & \multicolumn{1}{r|}{?} & \ldots\\ \hline
+\end{tabular}
+}
+\begin{flushright} \scalebox{0.9} {
+\begin{tabular}{|c|r|r|r|r|r|}
+\hline
+\ldots& \multicolumn{ 5}{|c|}{\textbf{Čas [s]}} \\ \hline
+\ldots& \textbf{Celkem} & \multicolumn{1}{c|}{\textbf{Segmentace}} & \multicolumn{1}{c|}{\textbf{Klastrování}} & \multicolumn{1}{c|}{\textbf{Kd-strom}} & \multicolumn{1}{c|}{\textbf{SVD}} \\ \hline
+\ldots& \multicolumn{1}{|r|}{26,83} & \multicolumn{1}{r|}{10,69} & \multicolumn{1}{r|}{16,14} & \multicolumn{1}{r|}{2,01} & \multicolumn{1}{r|}{3,69} \\ \hline
+\end{tabular}
+
+}\end{flushright}
+
+\caption{Tabulka zobrazuje informace o segmentaci mračna bodů Langewil. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
+\label{table:test-lw}
+\end{table}
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-lw}
+\caption{Ukázka segmentace mračna Langweil. (a) zobrazuje pouze nalezené segmenty, (b) zobrazuje segmenty včetně bodů, které nebyly segmentovány.}
+\label{fig:test-fa}
+\end{center}
+\end{figure}
+
+Segmentace mračna není určitě tak kvalitní, jak by se dalo očekávat. Problém v tomto přpadě však není v algoritmu segmentace, ale ve vstupních datech. Protože se jedná o sken starého papírového modelu, většina střech není rovná, naopak střechy jsou prohnuté či různě lomené. Segmentace tedy některé střechy nenalezla, protže nejsou rovné, u jiných našla např. dva segmenty na jedné střeše, protože střecha je různě zprohýbaná. Výsledky segmentace tedy nejdou příliš zhodnotit, vstupní mračno není příliš vhodné pro testování planární segmentace.
+
+Nicméně minimálně spodní velká rovina byla nalezena, stejně tak několik rovnějších střech bylo identifikováno správně. Algoritmus by tedy neměl mít problém segmentovat menší mračna s menší hustotou bodů.
+
+
+
+\newpage
+\section{Shrnutí výsledků testování}
+
+Lorem ipsum\ldots
 
 
 %*****************************************************************************
