@@ -128,7 +128,7 @@ unicode=true,
  \typeout{Nazev prace: \WorkTitle}
  \typeout{Vedouci prace: \Supervisor}
  \typeout{***************************************************}
- \newcommand\Department{Katedra počítačů}
+ \newcommand\Department{Katedra počítačové grafiky a interakce}
  \newcommand\Faculty{Fakulta elektrotechnická}
  \newcommand\University{České vysoké učení technické v Praze}
  \newcommand\labelSupervisor{Vedoucí práce}
@@ -163,7 +163,7 @@ Zde můžete napsat své poděkování, pokud chcete a máte komu děkovat.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%   Prohlaseni / Declaration 
-\declaration{V~Praze dne 25.\,5.\,2015}
+\declaration{V~Praze dne 24.\,5.\,2015}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%    Abstract 
@@ -1224,11 +1224,69 @@ Dále by se mohlo zdát, že z čelní a levé strany chybí v segmentech body. 
 
 Celkově bych však segmentaci ohodnotil jako úspěšnou, kromě dvou menších rovin byly na objektu rozeznány všechny stěny. Segmenty navíc obsahují naprostou většinu bodů z těchto rovin. Segmentace také nebyla viditelně ovlivněna větším množstvím chybných bodů mimo roviny.
 
-\newpage
+\cleardoublepage
 \subsubsection{Doudleby}
 
-\newpage
+Toto mračno reprezentuje zámek Douleby nad Orlicí. Mračno je poměrně velké a obsahuje několik výrazných rovin, viz obrázek \ref{fig:doudleby}.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/doudleby}
+\caption{Ukázka mračna Doudleby.}
+\label{fig:doudleby}
+\end{center}
+\end{figure}
+
+Výsledky segmentace jsou zaznamenány v tabulce \ref{table:test-do} a ukázka výsldné segmentace z různých úhlů je vidět na obrázku \ref{fig:test-do}.
+
+\begin{table}[ht]
+\resizebox{\textwidth}{!} {
+\begin{tabular}{|r|r|r|r|r|r|r|r|r|r|c|}
+\hline
+\textbf{} & \multicolumn{ 3}{c|}{\textbf{Parametry}} & \multicolumn{ 3}{c|}{\textbf{Body}} & \multicolumn{ 3}{c|}{\textbf{Segmenty}} &\ldots\\ \hline
+\multicolumn{1}{|c|}{\textbf{test}} & \textbf{P1} & \multicolumn{1}{c|}{\textbf{P2}} & \multicolumn{1}{c|}{\textbf{P3}} & \textbf{Celkem} & \multicolumn{ 2}{c|}{\textbf{Segmentováno}} & \textbf{Nalezeno} & \multicolumn{1}{c|}{\textbf{Očekáváno }} & \multicolumn{1}{c|}{\textbf{Správných}} &\ldots\\ \hline
+do-0.0 & \multicolumn{1}{r|}{80} & \multicolumn{1}{r|}{20} & \multicolumn{1}{r|}{10} & \multicolumn{1}{r|}{1299900} & \multicolumn{1}{r|}{1032386} & \multicolumn{1}{r|}{79,42\%} & \multicolumn{1}{r|}{11} & \multicolumn{1}{r|}{16} & \multicolumn{1}{r|}{11} &\ldots\\ \hline
+\end{tabular}
+}
+\begin{flushright} \scalebox{0.9} {
+\begin{tabular}{|c|r|r|r|r|r|}
+\hline
+\ldots& \multicolumn{ 5}{|c|}{\textbf{Čas [s]}} \\ \hline
+\ldots& \textbf{Celkem} & \multicolumn{1}{c|}{\textbf{Segmentace}} & \multicolumn{1}{c|}{\textbf{Klastrování}} & \multicolumn{1}{c|}{\textbf{Kd-strom}} & \multicolumn{1}{c|}{\textbf{SVD}} \\ \hline
+\ldots& \multicolumn{1}{|r|}{660,43} & \multicolumn{1}{r|}{542,61} & \multicolumn{1}{r|}{117,82} & \multicolumn{1}{r|}{149,93} & \multicolumn{1}{r|}{174,69} \\ \hline
+\end{tabular}
+}\end{flushright}
+
+\caption{Tabulka zobrazuje informace o segmentaci mračna bodů Doudleby. Paramtery jsou popsány v příloze \ref{chap:zkratky}.} 
+\label{table:test-do}
+\end{table}
+
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/test-do}
+\caption{Ukázka segmentace mračna Doudleby. (a) zobrazuje pouze nalezené segmenty, (b) zobrazuje segmenty včetně bodů, které nebyly segmentovány.}
+\label{fig:test-do}
+\end{center}
+\end{figure}
+
+Segmentace mračna sice segmentovala téměř 80\% bodů, nicméně nenalezla 5 rovin. Nebyla nalezena levá část střechy, dále chybí celá pravá část pravá stěna vstupní části. Dále nebyly nalezeny 3 menší segmenty zepředu a na boku vstupní části budovy. Všechny tyto segmenty mají společnou jednu vlastnost, a to je velmi malá hustota bodů oproti ostatním stěnám. Domnívám se, že kvůli této malé hustotě bodů není výpočet parametrů tak přesný, navíc celkově obsahují tyto nenalezené roviny malý počet bodů. K tomu se ještě přidává fakt, že celkově toto mračno obsahuje téměř 1,3 milionu bodů, takže vytvořené akumulátorové pole je poměrně velké. Myslím si, že spojení těchto tří vlivů dohromady způsobilo nenalezení těchto menších segmentů. Myslím si ale, že je to spíše problém celé této metody segmentace, než konkrétní implementace. Segmentace založena zejména na tom, že roviny vytvoří vrchol v akumulátorovém poli. Pokud však několik různých vlivů způsobí, že body v rovině nevytvoří výrazný vrchol, není téměř možné toto detekovat a tím pádem ani řešit.
+
+Aby byla nalezena aspoň ta největší střecha, bylo nutné použít větší parametr pro velikost okolí (80), což v kombinaci s téměř 1,3 miliony body způsobilo, že segmentace trvala 11 minut, což je výrazně více, než u všech předešlých testů. Celkově však segmentace není úplně špatná. U rovin, které byly nalezeny, byly segmentovány téměř všechny možné body a celkově bylo segmentováno téměř 80\% ze všech vstupních bodů. 
+
+
+\cleardoublepage
 \subsubsection{Faust}
+
+Vstupní mračno je zobrazeno na obrázku \ref{fig:faust}. Toto mračno je největší, které jsem měl při testování k dispozici, obsahuje necelých 1,5 milionu bodů.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/faust}
+\caption{Ukázka mračna Faust.}
+\label{fig:faust}
+\end{center}
+\end{figure}
+
 
 \newpage
 \subsubsection{Langweil}
