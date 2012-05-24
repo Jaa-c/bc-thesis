@@ -1398,13 +1398,13 @@ Co se týče paměťových a časových nároků, ty jsou logicky nejvíce závi
 %*****************************************************************************
 \chapter{Závěr}
 
-Cílem této práce bylo nastudovat, implementovat a otestovat dva zadané algoritmy. V průběhu práce na prvním algoritmu jsem bohužel zjistil, že pochopení a následná implementace algoritmu bude náročnější, než jsem předem očekával. To bylo způsobené částečně tím, že tato práce byla moje první seznámení s 3D rekonstrukcí mračen bodů, obecně byla i mojí první větší zkušenosté se zpracováním takto velkých vstupních dat. Z těchto důvodů jsem strávil přiliš mnoho času při studování základních principů a technik. V neposlední řadě jsem se dlouhou dobu učil debuggovat takovýto druh algoritmu, což není jednoduché, protože veškerá zpracoávaná data mají pouze matematické vyjádření (body, roviny), které se nedá jednoduše představit a vzhledem k množství vstupních dat se často nedá ani jednoduše vykreslit. Z těchto důvodů jsem se s vedoucím práce dohodl, že zpracuji pouze první (a také složitější) algoritmus, oba algoritmy bych bohužel zpracovat nestihl. Nicméně nemyslím si, že by celkový rozsah práce byl nedostatečný. Tím, že jsem implementoval pouze jeden algoritmus, jsem se na něj mohl více zaměřit a také jsem mohl více času věnovat testování, aby byl algoritmus co nejkvalitnější na reálných datech.
+Cílem této práce bylo nastudovat, implementovat a otestovat dva zadané algoritmy. V~průběhu práce na prvním algoritmu jsem bohužel zjistil, že pochopení a následná implementace algoritmu bude náročnější, než jsem předem očekával. To bylo způsobené částečně tím, že tato práce byla moje první seznámení s 3D rekonstrukcí mračen bodů, obecně byla i mojí první větší zkušenosté se zpracováním takto velkých vstupních dat. Z těchto důvodů jsem strávil přiliš mnoho času při studování základních principů a technik. V neposlední řadě jsem se dlouhou dobu učil debuggovat takovýto druh algoritmu, což není jednoduché, protože veškerá zpracoávaná data mají pouze matematické vyjádření (body, roviny), které se nedá jednoduše představit a vzhledem k množství vstupních dat se často nedá ani jednoduše vykreslit. Z těchto důvodů jsem se s vedoucím práce dohodl, že zpracuji pouze první (a také složitější) algoritmus, oba algoritmy bych bohužel zpracovat nestihl. Nicméně nemyslím si, že by celkový rozsah práce byl nedostatečný. Tím, že jsem implementoval pouze jeden algoritmus, jsem se na něj mohl více zaměřit a také jsem mohl více času věnovat testování, aby bzla segmentace reálných dat co nejkvalitnější.
 
-Co se týče zpracovaného algoritmu, i když byl teoreticky popsán velmi podrobně, jeho implementace vyžadovala mnoho vlastních úprav a myšlenek. Předně bylo důležité zvolit vhodné datové struktury pro reprezentaci mračna bodů a pro správnou reprezentaci akumulátorového pole. Dále bylo nutné vyhledat knihovny pro reprezentaci kd-stromu a SVD dekompozici s důrazem na co nejvyšší výkon. Než jsem nalezl knihovny, které jsem ve výsledku použil, testoval jsem desítky různých více či méně kvalitních řešení. Při testování těchto knihoven mně osobně překvapilo, že i když mají dané metody ve všech knihovnách stejnou asymptotickou složitost, výsledný reálný výkon těchto knihoven byl velmi závislý na zvolené implementace a mezi jednotlivými knihovnami se výrazně lišil.
+Co se týče zpracovaného algoritmu, i když byl teoreticky popsán velmi podrobně, jeho implementace vyžadovala mnoho vlastních úprav a myšlenek. Předně bylo důležité zvolit vhodné datové struktury pro reprezentaci mračna bodů a pro správnou reprezentaci akumulátorového pole. Dále bylo nutné vyhledat knihovny pro reprezentaci kd-stromu a SVD dekompozici s důrazem na co nejvyšší výkon. Než jsem nalezl knihovny, které jsem ve výsledku použil, testoval jsem desítky různých více či méně kvalitních řešení. Při testování těchto knihoven mně osobně překvapilo, že i když mají dané metody ve všech knihovnách stejnou asymptotickou složitost, výsledný reálný výkon těchto knihoven byl velmi závislý na zvolené implementaci a mezi jednotlivými knihovnami se výrazně (někdy až řádově) lišil.
 
-Dále jsem se při implementaci algoritmu musel vypořádat se skutečností, že autoři původního článku používali pro testování odlišný typ vstupních dat s definovaným šumem (odchylkou bodů v daných směrech), na jehož základě odvozovali mnohé rozměry a hodnoty. Já jsem takovýto šum v datech neměl definovaný, proto jsem musel vymyslet vlastní definice pro výpočet velikosti okolí, velikosti bufferu při definici okolí, velikosti akumulátorového pole apod. Dále jsem upravil metodu pro vybírání bodů z akumulátorového pole, kdy jsem místo vybírání vrcholů po jednom navrhl vybírání všech vrcholů postupně, čímž jsem předešl nežádoucím chybám v situaci, kdy byly dva vrcholy v akumulátorovém poli v těsné blízkosti. V neposlední řadě jsem implementaci rozdělil na dvě nezávislé části, které je možné provádět odděleně, tím je dána uživateli možnost provádět jednu část algoritmu opakovaně bez nutnosti provádět celý algoritmus, čímž lze výrazně ušetřit výsledný čas strávený segmentací. Nakonec jsem také definoval tři parametry, které uživateli umožní přizpůsobit kvalitu a rychlost segmentace na konkrétní zpracovávaná data. Toto je sice na úkor automatizace celého algoritmu, nicméně nedovedu si představit, že by takovýto algoritmus fungoval plně automaticky na naprosto různých vstupních datech.
+Dále jsem se při implementaci algoritmu musel vypořádat se skutečností, že autoři původního článku používali pro testování odlišný typ vstupních dat s definovaným šumem (odchylkou bodů v daných směrech), na jehož základě odvozovali mnohé rozměry a hodnoty. Já jsem takovýto šum v datech neměl definovaný, proto jsem musel vymyslet vlastní definice pro výpočet velikosti okolí, velikosti bufferu při definici okolí, velikosti akumulátorového pole apod. Dále jsem upravil metodu pro vybírání bodů z akumulátorového pole, kdy jsem místo vybírání vrcholů po jednom navrhl vybírání všech vrcholů postupně, čímž jsem předešel nežádoucím chybám v situaci, kdy byly dva vrcholy v akumulátorovém poli v těsné blízkosti. V neposlední řadě jsem implementaci rozdělil na dvě nezávislé části, které je možné provádět odděleně, tím je dána uživateli možnost provádět jednu část algoritmu opakovaně bez nutnosti provádět celý algoritmus, čímž lze výrazně ušetřit výsledný čas strávený segmentací. Nakonec jsem také definoval tři parametry, které uživateli umožní přizpůsobit kvalitu a rychlost segmentace na konkrétní zpracovávaná data. Toto je sice na úkor automatizace celého algoritmu, nicméně nedovedu si představit, že by takovýto algoritmus fungoval plně automaticky na naprosto různých vstupních datech.
 
-Algoritmus ale samozřejmě není dokonalý, testování ukázalo několik problematických situací, kdy segmenty nebyly nalezeny nebo naopak byly nalezeny dva segmenty v rámci jedné roviny. Zde je rozhodně prostor pro případné rozšíření práce nebo navázání na práci. Je zde prostor pro definování lepší metody určení velikosti akumulátorového pole, určitě by také bylo možné vylepšit metodu vyhledávání vrcholů v akumulátorovém poli a jejich následné vybírání. Vylepšení těchto částí algoritmu by se mohlo výrazně projevit na zlepšené kvalitě segmentace, která by byla schopna detekovat větší množství segmentů. Je však nutné vzít v úvahu, že zde jsou omezení dané samotným principem hlasování do akumulátorového pole. Nedá se očekávat, že by byl algoritmus schopný nalézt roviny o desítkách až stovkách bodů v mračnech, které obsahují statisíce až miliony bodů s nezanedbatelným množstvím šumu a bodů, které v žádných rovinách neleží. Dále je zde také možnost zjednodušit či vylepšit systém zadávaných parametrů, případně nějaký parametr efektivně odebrat. Každý takováto povinný uživatelský parametr výrazně snižuje použitelnost algoritmu, uživatel je nyní nucen pochopit alespoň základní princip algoritmu, aby byl schopen parametryvhodně zvolit.
+Algoritmus ale samozřejmě není dokonalý, testování ukázalo několik problematických situací, kdy segmenty nebyly nalezeny nebo naopak byly nalezeny dva segmenty v rámci jedné roviny. Zde je rozhodně prostor pro případné rozšíření práce nebo navázání na práci. Je zde prostor pro definování lepší metody určení velikosti akumulátorového pole, určitě by také bylo možné vylepšit metodu vyhledávání vrcholů v akumulátorovém poli a jejich následné vybírání. Vylepšení těchto částí algoritmu by se mohlo výrazně projevit na zlepšené kvalitě segmentace, která by byla schopna detekovat větší množství segmentů. Je však nutné vzít v úvahu, že zde jsou omezení dané samotným principem hlasování do akumulátorového pole. Nedá se očekávat, že by byl algoritmus schopný nalézt roviny o desítkách až stovkách bodů v mračnech, které obsahují statisíce až miliony bodů s nezanedbatelným množstvím šumu a bodů, které v žádných rovinách neleží. Dále se také nabízí možnost možnost zjednodušit či vylepšit systém zadávaných parametrů, případně nějaký parametr efektivně odebrat. Každý takovýto povinný uživatelský parametr výrazně snižuje použitelnost algoritmu, uživatel je nyní nucen pochopit alespoň základní princip algoritmu, aby byl schopen parametry vhodně zvolit.
 
 Pokud bych měl celkově zhodnotit kvalitu algoritmu, tak si myslím, že algoritmus je poměrně efektivní a je schopen ve velmi různorodých mračnech bodů nalézt většinu požadovaných rovin v přijatelné kvalitě, ale rozhodně zde je prostor pro vylepšení.
 
@@ -1459,33 +1459,13 @@ Pokud bych měl celkově zhodnotit kvalitu algoritmu, tak si myslím, že algori
 
 
 %*****************************************************************************
-\chapter{Instalační a uživatelská příručka}
-Tady asi nemám moc co psát\ldots
-
-
-%*****************************************************************************
+\begin{changeheight}{3cm}
 \chapter{Obsah přiloženého CD}
 \label{chap:CD}
-Tato příloha je povinná pro každou práci. Každá práce musí totiž obsahovat přiložené CD. Viz dále.
-
-Může vypadat například takto. Váš seznam samozřejmě bude odpovídat typu vaší práce.
-
-%\begin{figure}[h]
-%\begin{center}
-%\includegraphics[width=14cm]{figures/seznamcd}
-%\caption{Seznam přiloženého CD --- příklad}
-%\label{fig:seznamcd}
-%\end{center}
-%\end{figure}
-
-Na GNU/Linuxu si strukturu přiloženého CD můžete snadno vyrobit příkazem:\\ 
-\verb|$ tree . >tree.txt|\\
-Ve vzniklém souboru pak stačí pouze doplnit komentáře.
-
-Z \textbf{README.TXT} (případne index.html apod.)  musí být rovněž zřejmé, jak programy instalovat, spouštět a
-jaké požadavky mají tyto programy na hardware.
-
-Adresář \textbf{text}  musí obsahovat soubor s vlastním textem práce v PDF nebo PS formátu, který bude později
-použit pro prezentaci diplomové práce na WWW.
+\begin{figure}[ht]
+\includegraphics[height=17cm]{figures/CD}
+\label{fig:CD}
+\end{figure}
+\end{changeheight}
 
 \end{document}
